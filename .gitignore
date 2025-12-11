@@ -1,0 +1,39 @@
+# Ignore common temporary and cache files
+cache/
+tmp/
+temp/
+
+# Ignore vendor directories (if using Composer)
+vendor/
+
+# Ignore IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Ignore logs
+*.log
+
+# Ignore OS generated files
+Thumbs.db
+desktop.ini
+
+# Ignore backup files
+*.bak
+*.backup
+*~
+
+# Ignore compiled files
+*.pyc
+*.pyo
+__pycache__/
+
+# Ignore package manager files (if not needed)
+node_modules/
+package-lock.json
+
+# Ignore local configuration files
+config.local.php

@@ -31,20 +31,19 @@ defined('MOODLE_INTERNAL') || die();
  * It is called automatically by Moodle when viewing an OfflineQuiz activity.
  *
  * @param navigation_node $navigation The navigation node to extend
- * @param stdClass $course The course object
- * @param stdClass $context The context object
  * @return void
  */
-function local_offlinequizaddons_extend_navigation($navigation, $course, $context) {
+function local_offlinequizaddons_extend_navigation($navigation) {
     global $PAGE;
 
     // Only extend navigation for OfflineQuiz module contexts
+    $context = $PAGE->context;
     if ($context->contextlevel != CONTEXT_MODULE) {
         return;
     }
 
     // Get the course module
-    $cm = get_coursemodule_from_id('offlinequiz', $context->instanceid, 0, false, MUST_EXIST);
+    $cm = get_coursemodule_from_id('offlinequiz', $context->instanceid, 0, false, IGNORE_MISSING);
     if (!$cm || $cm->modname !== 'offlinequiz') {
         return;
     }

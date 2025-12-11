@@ -52,15 +52,6 @@ $PAGE->set_pagelayout('incourse');
 // Add breadcrumb
 $PAGE->navbar->add(get_string('tabname', 'local_offlinequizaddons'));
 
-// Log the view
-$event = \core\event\course_module_viewed::create([
-    'objectid' => $offlinequiz->id,
-    'context' => $context,
-]);
-$event->add_record_snapshot('course', $course);
-$event->add_record_snapshot('offlinequiz', $offlinequiz);
-$event->trigger();
-
 // Get the renderer
 $output = $PAGE->get_renderer('local_offlinequizaddons');
 

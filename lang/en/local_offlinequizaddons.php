@@ -33,7 +33,7 @@ $string['mainpagetitle'] = 'OfflineQuiz Addons';
 
 // Temporal Convector strings
 $string['temporal_convector'] = 'Temporal Convector';
-$string['temporal_description'] = 'The Temporal Convector analyzes your offline quiz and normalizes the number of pages across all exam copies. This ensures that all students receive exam copies with the same number of pages, preventing layout inconsistencies.';
+$string['temporal_description'] = 'The Temporal Convector normalizes the number of pages across all exam copies. This ensures that all exam copies have the same number of pages, preventing layout inconsistencies.';
 $string['analysis_summary'] = 'Analysis Summary';
 $string['group_analysis'] = 'Group Analysis';
 $string['question_details'] = 'Question Details';

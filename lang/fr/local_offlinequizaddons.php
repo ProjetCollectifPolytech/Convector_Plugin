@@ -33,7 +33,7 @@ $string['mainpagetitle'] = 'Extensions OfflineQuiz';
 
 // Chaînes du Convecteur Temporel
 $string['temporal_convector'] = 'Convecteur Temporel';
-$string['temporal_description'] = 'Le Convecteur Temporel analyse votre quiz hors ligne et normalise le nombre de pages sur toutes les copies d\'examen. Cela garantit que tous les étudiants reçoivent des copies d\'examen avec le même nombre de pages, évitant ainsi les incohérences de mise en page.';
+$string['temporal_description'] = 'Le Convecteur Temporel normalise le nombre de pages sur toutes les copies de votre examen. Cela garantit que les copies d\'examen aient le même nombre de pages, évitant ainsi les incohérences de mise en page.';
 $string['analysis_summary'] = 'Résumé de l\'analyse';
 $string['group_analysis'] = 'Analyse par groupe';
 $string['question_details'] = 'Détails des questions';

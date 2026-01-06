@@ -138,28 +138,6 @@ if (!$processor->validate()) {
     // Display analysis
     $analysis = $processor->analyze_copies();
     
-    // Display summary
-    echo html_writer::start_tag('div', ['class' => 'temporal-summary mb-4']);
-    echo $OUTPUT->heading(get_string('analysis_summary', 'local_offlinequizaddons'), 3);
-    
-    $summarydata = [
-        get_string('max_pages', 'local_offlinequizaddons') => $analysis['maxpages'],
-        get_string('needs_normalization', 'local_offlinequizaddons') => 
-            $analysis['needsnormalization'] ? 
-            get_string('yes') : 
-            get_string('no')
-    ];
-    
-    echo html_writer::start_tag('table', ['class' => 'table table-bordered']);
-    foreach ($summarydata as $label => $value) {
-        echo html_writer::start_tag('tr');
-        echo html_writer::tag('th', $label);
-        echo html_writer::tag('td', $value);
-        echo html_writer::end_tag('tr');
-    }
-    echo html_writer::end_tag('table');
-    echo html_writer::end_tag('div');
-
     // Display group analysis table
     echo $OUTPUT->heading(get_string('group_analysis', 'local_offlinequizaddons'), 3);
     
@@ -215,9 +193,26 @@ if (!$processor->validate()) {
         $qtable->attributes['class'] = 'table table-sm';
         
         foreach ($groupdata['questions'] as $qdata) {
+            // Get question type label
+            $questiontype = get_string('pluginname', 'qtype_' . $qdata['type']);
+            
+            // For multichoice, check if it's single or multiple answer
+            if ($qdata['type'] === 'multichoice') {
+                $correctanswers = $DB->count_records_select('question_answers', 
+                    'question = ? AND fraction > 0', 
+                    [$qdata['id']]
+                );
+                
+                if ($correctanswers === 1) {
+                    $questiontype = 'Choix unique';
+                } else {
+                    $questiontype = 'Choix multiple';
+                }
+            }
+            
             $qtable->data[] = [
                 $qdata['name'],
-                get_string('pluginname', 'qtype_' . $qdata['type']),
+                $questiontype,
                 $qdata['page']
             ];
         }

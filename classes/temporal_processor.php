@@ -218,6 +218,7 @@ class temporal_processor {
                 }
 
                 $questiondetails[] = [
+                    'id' => $question->id,
                     'name' => $question->name,
                     'type' => $question->qtype,
                     'page' => $question->page

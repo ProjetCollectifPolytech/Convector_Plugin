@@ -67,9 +67,6 @@ class mainpage implements renderable, templatable {
      */
     public function export_for_template(renderer_base $output) {
         $data = new stdClass();
-        $data->title = get_string('mainpagetitle', 'local_offlinequizaddons');
-        $data->helloworld = get_string('helloworld', 'local_offlinequizaddons');
-        $data->welcome = get_string('welcome', 'local_offlinequizaddons');
         $data->cmid = $this->cmid;
         
         // Additional data can be added here as the plugin grows

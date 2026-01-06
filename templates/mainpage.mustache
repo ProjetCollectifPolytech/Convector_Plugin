@@ -49,13 +49,30 @@
     
     <div class="alert alert-info mt-4">
         <h4>{{#str}}pluginname, local_offlinequizaddons{{/str}}</h4>
-        <p>This is a demonstration page. This plugin extends OfflineQuiz without modifying its core code.</p>
-        <p>Future functionality can be added here such as:</p>
+        <p>This plugin extends OfflineQuiz without modifying its core code.</p>
+        <p>Available features:</p>
         <ul>
-            <li>Custom reports and analytics</li>
-            <li>Additional quiz management tools</li>
-            <li>Enhanced export/import features</li>
-            <li>Custom settings and configurations</li>
+            <li><strong>{{#str}}temporal_convector, local_offlinequizaddons{{/str}}</strong> - Normalize page counts across all exam copies</li>
+            <li>Custom reports and analytics (coming soon)</li>
+            <li>Additional quiz management tools (coming soon)</li>
+            <li>Enhanced export/import features (coming soon)</li>
         </ul>
     </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="icon fa fa-file-pdf"></i> {{#str}}temporal_convector, local_offlinequizaddons{{/str}}
+                    </h5>
+                    <p class="card-text">{{#str}}temporal_description, local_offlinequizaddons{{/str}}</p>
+                    <a href="temporal.php?id={{cmid}}" class="btn btn-primary">
+                        {{#str}}temporal_convector, local_offlinequizaddons{{/str}}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+

@@ -30,3 +30,32 @@ $string['tabname'] = 'Addons';
 $string['helloworld'] = 'Hello World';
 $string['welcome'] = 'Welcome to OfflineQuiz Addons';
 $string['mainpagetitle'] = 'OfflineQuiz Addons';
+
+// Temporal Convector strings
+$string['temporal_convector'] = 'Temporal Convector';
+$string['temporal_description'] = 'The Temporal Convector analyzes your offline quiz and normalizes the number of pages across all exam copies. This ensures that all students receive exam copies with the same number of pages, preventing layout inconsistencies.';
+$string['analysis_summary'] = 'Analysis Summary';
+$string['group_analysis'] = 'Group Analysis';
+$string['question_details'] = 'Question Details';
+$string['max_pages'] = 'Maximum pages';
+$string['needs_normalization'] = 'Needs normalization';
+$string['question_count'] = 'Number of questions';
+$string['current_pages'] = 'Current pages';
+$string['blank_pages_needed'] = 'Blank pages needed';
+$string['final_pages'] = 'Final pages';
+$string['pages'] = 'Pages';
+$string['group'] = 'Group';
+$string['generate_normalized_pdfs'] = 'Generate Normalized PDFs';
+$string['no_normalization_needed'] = 'All exam copies already have the same number of pages. No normalization is needed.';
+$string['temporal_info'] = 'This exam currently has {$a->currentpages} pages and will be normalized to {$a->targetpages} pages.';
+$string['blankpage'] = 'Blank page for normalization';
+
+// Instructions for PDF cover page
+$string['instructions'] = 'Instructions';
+$string['instructions_text'] = "- Fill out the form completely\n- Mark your answers clearly\n- Use only black or blue pen\n- Do not fold or damage this form";
+
+// Error messages
+$string['error_no_offlinequiz'] = 'Error: No offline quiz found.';
+$string['error_no_questions'] = 'Error: This exam does not contain any questions. At least one question is required.';
+$string['error_invalid_question_type'] = 'Error: Question type "{$a}" is not compatible. Only multiple choice and essay questions are supported.';
+$string['error_pdf_generation'] = 'Error: Failed to generate PDF files. Please try again.';

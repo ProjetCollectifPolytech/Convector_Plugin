@@ -45,7 +45,7 @@ require_capability('local/offlinequizaddons:view', $context);
 // Set up the page
 $PAGE->set_url('/local/offlinequizaddons/temporal.php', ['id' => $cm->id]);
 $PAGE->set_context($context);
-$PAGE->set_title(format_string($offlinequiz->name) . ' - ' . get_string('temporal_convector', 'local_offlinequizaddons'));
+$PAGE->set_title(get_string('temporal_convector', 'local_offlinequizaddons'));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_pagelayout('incourse');
 
@@ -116,8 +116,14 @@ if ($download && $action === 'generate') {
 // Output the page
 echo $OUTPUT->header();
 
-// Hide the activity description on this page
-echo html_writer::tag('style', '.activity-description { display: none; }');
+// Hide the activity description and offlinequiz breadcrumb item
+echo html_writer::tag('style', '
+    .activity-description { display: none; }
+    .breadcrumb-item a[href*="mod/offlinequiz/view.php"],
+    .breadcrumb-item:has(a[href*="mod/offlinequiz/view.php"]) {
+        display: none !important;
+    }
+');
 
 // Display page heading
 echo $OUTPUT->heading(get_string('temporal_convector', 'local_offlinequizaddons'));

@@ -45,11 +45,13 @@ require_capability('local/offlinequizaddons:view', $context);
 // Set up the page
 $PAGE->set_url('/local/offlinequizaddons/view.php', ['id' => $cm->id]);
 $PAGE->set_context($context);
-$PAGE->set_title(format_string($offlinequiz->name) . ' - ' . get_string('tabname', 'local_offlinequizaddons'));
+$PAGE->set_title(get_string('tabname', 'local_offlinequizaddons'));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_pagelayout('incourse');
 
-// Add breadcrumb
+// Override the activity title in the navigation
+$PAGE->navbar->ignore_active();
+$PAGE->navbar->add($course->shortname, new moodle_url('/course/view.php', ['id' => $course->id]));
 $PAGE->navbar->add(get_string('tabname', 'local_offlinequizaddons'));
 
 // Get the renderer
@@ -60,5 +62,15 @@ $page = new \local_offlinequizaddons\output\mainpage($cm->id, $offlinequiz);
 
 // Output the page
 echo $OUTPUT->header();
+
+// Hide the offlinequiz name in breadcrumb and activity description with CSS
+echo html_writer::tag('style', '
+    .activity-description { display: none !important; }
+    .breadcrumb-item a[href*="mod/offlinequiz/view.php"],
+    .breadcrumb-item:has(a[href*="mod/offlinequiz/view.php"]) {
+        display: none !important;
+    }
+');
+
 echo $output->render($page);
 echo $OUTPUT->footer();

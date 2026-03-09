@@ -15,62 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Main view page for local_offlinequizaddons plugin.
- *
- * This page displays the main content of the OfflineQuiz addons tab.
+ * Redirect to temporal page - main view is no longer used.
  *
  * @package    local_offlinequizaddons
- * @copyright  2025
+ * @copyright  2026
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(__DIR__ . '/../../config.php');
-require_once($CFG->dirroot . '/mod/offlinequiz/lib.php');
 
 // Get the course module ID from the URL parameter
 $cmid = required_param('id', PARAM_INT);
 
-// Get the course module and verify it's an OfflineQuiz
-$cm = get_coursemodule_from_id('offlinequiz', $cmid, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
-$offlinequiz = $DB->get_record('offlinequiz', ['id' => $cm->instance], '*', MUST_EXIST);
-
-// Require login and get context
-require_login($course, true, $cm);
-$context = context_module::instance($cm->id);
-
-// Check capability
-require_capability('local/offlinequizaddons:view', $context);
-
-// Set up the page
-$PAGE->set_url('/local/offlinequizaddons/view.php', ['id' => $cm->id]);
-$PAGE->set_context($context);
-$PAGE->set_title(get_string('tabname', 'local_offlinequizaddons'));
-$PAGE->set_heading(format_string($course->fullname));
-$PAGE->set_pagelayout('incourse');
-
-// Override the activity title in the navigation
-$PAGE->navbar->ignore_active();
-$PAGE->navbar->add($course->shortname, new moodle_url('/course/view.php', ['id' => $course->id]));
-$PAGE->navbar->add(get_string('tabname', 'local_offlinequizaddons'));
-
-// Get the renderer
-$output = $PAGE->get_renderer('local_offlinequizaddons');
-
-// Create the renderable page
-$page = new \local_offlinequizaddons\output\mainpage($cm->id, $offlinequiz);
-
-// Output the page
-echo $OUTPUT->header();
-
-// Hide the offlinequiz name in breadcrumb and activity description with CSS
-echo html_writer::tag('style', '
-    .activity-description { display: none !important; }
-    .breadcrumb-item a[href*="mod/offlinequiz/view.php"],
-    .breadcrumb-item:has(a[href*="mod/offlinequiz/view.php"]) {
-        display: none !important;
-    }
-');
-
-echo $output->render($page);
-echo $OUTPUT->footer();
+// Redirect to temporal convector
+redirect(new moodle_url('/local/offlinequizaddons/temporal.php', ['id' => $cmid]));

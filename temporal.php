@@ -30,7 +30,7 @@ $cmid = required_param('id', PARAM_INT);
 $action = optional_param('action', 'view', PARAM_ALPHA);
 $download = optional_param('download', false, PARAM_BOOL);
 
-// Get the course module and verify it's an OfflineQuiz
+// Get the course module and verify that it is an OfflineQuiz
 $cm = get_coursemodule_from_id('offlinequiz', $cmid, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
 $offlinequiz = $DB->get_record('offlinequiz', ['id' => $cm->instance], '*', MUST_EXIST);
@@ -54,7 +54,6 @@ $processor = new \local_offlinequizaddons\temporal_processor($offlinequiz);
 
 // Handle download action
 if ($download && $action === 'generate') {
-    // Validate first
     if (!$processor->validate()) {
         foreach ($processor->get_errors() as $error) {
             \core\notification::error($error);
@@ -67,32 +66,27 @@ if ($download && $action === 'generate') {
     $zipfile = $pdfgen->generate_normalized_pdfs();
 
     if ($zipfile && file_exists($zipfile)) {
-        // Ensure the file is fully written and closed
         clearstatcache(true, $zipfile);
         
-        // Longer delay to ensure file is completely ready
-        usleep(300000); // 0.3 second
-        
+        usleep(300000);
+
         // Verify file is readable and has content
         $filesize = filesize($zipfile);
         if ($filesize > 0) {
-            // Read file content directly
             $content = file_get_contents($zipfile);
             
             if ($content !== false && strlen($content) > 0) {
-                // Clean any output buffers
                 while (ob_get_level()) {
                     ob_end_clean();
                 }
                 
-                // Send headers
+                // Send headers and content
                 header('Content-Type: application/zip');
                 header('Content-Disposition: attachment; filename="' . basename($zipfile) . '"');
                 header('Content-Length: ' . strlen($content));
                 header('Cache-Control: private');
                 header('Pragma: public');
                 
-                // Send content
                 echo $content;
                 exit;
             } else {
@@ -130,17 +124,14 @@ echo html_writer::div(
     'alert alert-info'
 );
 
-// Validate the offlinequiz
+// Validate the offlinequiz and display analysis
 if (!$processor->validate()) {
-    // Display errors
     foreach ($processor->get_errors() as $error) {
         echo $OUTPUT->notification($error, 'error');
     }
 } else {
-    // Display analysis
     $analysis = $processor->analyze_copies();
     
-    // Display group analysis table
     echo $OUTPUT->heading(get_string('group_analysis', 'local_offlinequizaddons'), 3);
     
     $table = new html_table();
@@ -163,8 +154,7 @@ if (!$processor->validate()) {
             $data['blankpages'],
             $data['targetpages']
         ]);
-        
-        // Highlight rows that need blank pages
+
         if ($data['blankpages'] > 0) {
             $row->attributes['class'] = 'table-warning';
         }
@@ -174,7 +164,6 @@ if (!$processor->validate()) {
 
     echo html_writer::table($table);
 
-    // Display questions details (collapsible)
     echo html_writer::start_tag('div', ['class' => 'mt-4']);
     echo $OUTPUT->heading(get_string('question_details', 'local_offlinequizaddons'), 3);
     
@@ -195,10 +184,8 @@ if (!$processor->validate()) {
         $qtable->attributes['class'] = 'table table-sm';
         
         foreach ($groupdata['questions'] as $qdata) {
-            // Get question type label
             $questiontype = get_string('pluginname', 'qtype_' . $qdata['type']);
             
-            // For multichoice, check if it's single or multiple answer
             if ($qdata['type'] === 'multichoice') {
                 $correctanswers = $DB->count_records_select('question_answers', 
                     'question = ? AND fraction > 0', 
@@ -234,7 +221,6 @@ if (!$processor->validate()) {
             'download' => 1
         ]);
         
-        // Custom blue button with white text
         echo html_writer::start_tag('form', ['method' => 'post', 'action' => $generateurl->out_omit_querystring()]);
         foreach ($generateurl->params() as $key => $value) {
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => $key, 'value' => $value]);

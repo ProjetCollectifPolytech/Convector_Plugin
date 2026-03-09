@@ -69,22 +69,18 @@ class temporal_processor {
 
         $this->errors = [];
 
-        // Check if offlinequiz exists
         if (!$this->offlinequiz) {
             $this->errors[] = get_string('error_no_offlinequiz', 'local_offlinequizaddons');
             return false;
         }
 
-        // Get questions for this offlinequiz
         $this->questions = $this->get_offlinequiz_questions();
 
-        // Check if there are questions
         if (empty($this->questions)) {
             $this->errors[] = get_string('error_no_questions', 'local_offlinequizaddons');
             return false;
         }
 
-        // Validate question types (should be multichoice or essay)
         foreach ($this->questions as $question) {
             if (!in_array($question->qtype, ['multichoice', 'essay', 'shortanswer', 'truefalse'])) {
                 $this->errors[] = get_string('error_invalid_question_type', 'local_offlinequizaddons', $question->qtype);

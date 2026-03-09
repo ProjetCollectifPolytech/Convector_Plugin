@@ -34,41 +34,8 @@ defined('MOODLE_INTERNAL') || die();
  * @return void
  */
 function local_offlinequizaddons_extend_navigation($navigation) {
-    global $PAGE;
-
-    // Only extend navigation for OfflineQuiz module contexts
-    $context = $PAGE->context;
-    if ($context->contextlevel != CONTEXT_MODULE) {
-        return;
-    }
-
-    // Get the course module
-    $cm = get_coursemodule_from_id('offlinequiz', $context->instanceid, 0, false, IGNORE_MISSING);
-    if (!$cm || $cm->modname !== 'offlinequiz') {
-        return;
-    }
-
-    // Check if user has capability to view the addons
-    if (!has_capability('local/offlinequizaddons:view', $context)) {
-        return;
-    }
-
-    // Add the new tab to the navigation
-    $url = new moodle_url('/local/offlinequizaddons/view.php', ['id' => $cm->id]);
-    $node = navigation_node::create(
-        get_string('tabname', 'local_offlinequizaddons'),
-        $url,
-        navigation_node::TYPE_SETTING,
-        null,
-        'offlinequizaddons',
-        new pix_icon('i/settings', '')
-    );
-
-    if ($PAGE->url->compare($url, URL_MATCH_BASE)) {
-        $node->make_active();
-    }
-
-    $navigation->add_node($node);
+    // Disabled - addons are now accessed directly from the Preparation tab
+    return;
 }
 
 /**
@@ -81,36 +48,6 @@ function local_offlinequizaddons_extend_navigation($navigation) {
  * @return void
  */
 function local_offlinequizaddons_extend_settings_navigation($settingsnav, $context) {
-    global $PAGE;
-
-    // Only extend for OfflineQuiz module contexts
-    if ($context->contextlevel != CONTEXT_MODULE) {
-        return;
-    }
-
-    // Verify this is an OfflineQuiz module
-    $cm = get_coursemodule_from_id('offlinequiz', $context->instanceid, 0, false, IGNORE_MISSING);
-    if (!$cm || $cm->modname !== 'offlinequiz') {
-        return;
-    }
-
-    // Check capability
-    if (!has_capability('local/offlinequizaddons:view', $context)) {
-        return;
-    }
-
-    // Find the module settings node
-    $modulenode = $settingsnav->find('modulesettings', navigation_node::TYPE_SETTING);
-    if ($modulenode) {
-        $url = new moodle_url('/local/offlinequizaddons/view.php', ['id' => $cm->id]);
-        $node = navigation_node::create(
-            get_string('tabname', 'local_offlinequizaddons'),
-            $url,
-            navigation_node::TYPE_SETTING,
-            null,
-            'offlinequizaddons',
-            new pix_icon('i/settings', '')
-        );
-        $modulenode->add_node($node);
-    }
+    // Disabled - addons are now accessed directly from the Preparation tab
+    return;
 }

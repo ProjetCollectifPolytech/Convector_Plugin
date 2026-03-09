@@ -31,8 +31,9 @@ $string['helloworld'] = 'Bonjour le monde';
 $string['welcome'] = 'Bienvenue dans les Extensions OfflineQuiz';
 $string['mainpagetitle'] = 'Extensions OfflineQuiz';
 
-// Chaînes du Convecteur Temporel
+// Temporal Convector strings
 $string['temporal_convector'] = 'Convecteur Temporel';
+$string['temporal_convector_link'] = 'Télécharger les données à partir du convecteur temporel';
 $string['temporal_description'] = 'Le Convecteur Temporel normalise le nombre de pages sur toutes les copies de votre examen. Cela garantit que les copies d\'examen aient le même nombre de pages, évitant ainsi les incohérences de mise en page.';
 $string['analysis_summary'] = 'Résumé de l\'analyse';
 $string['group_analysis'] = 'Analyse par groupe';
@@ -50,11 +51,11 @@ $string['no_normalization_needed'] = 'Toutes les copies d\'examen ont déjà le 
 $string['temporal_info'] = 'Cet examen comporte actuellement {$a->currentpages} pages et sera normalisé à {$a->targetpages} pages.';
 $string['blankpage'] = 'Page blanche pour la normalisation';
 
-// Instructions pour la page de couverture PDF
+// Instructions for PDF cover page
 $string['instructions'] = 'Instructions';
 $string['instructions_text'] = "- Remplissez le formulaire complètement\n- Marquez vos réponses clairement\n- Utilisez uniquement un stylo noir ou bleu\n- Ne pliez pas et n'abîmez pas ce formulaire";
 
-// Messages d'erreur
+// Error messages
 $string['error_no_offlinequiz'] = 'Erreur : Aucun quiz hors ligne trouvé.';
 $string['error_no_questions'] = 'Erreur : Cet examen ne contient aucune question. Au moins une question est requise.';
 $string['error_invalid_question_type'] = 'Erreur : Le type de question "{$a}" n\'est pas compatible. Seuls les QCM et les questions de rédaction sont supportés.';

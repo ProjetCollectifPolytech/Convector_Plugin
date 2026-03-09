@@ -49,10 +49,6 @@ $PAGE->set_title(get_string('temporal_convector', 'local_offlinequizaddons'));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_pagelayout('incourse');
 
-// Add breadcrumb
-$PAGE->navbar->add(get_string('tabname', 'local_offlinequizaddons'), new moodle_url('/local/offlinequizaddons/view.php', ['id' => $cm->id]));
-$PAGE->navbar->add(get_string('temporal_convector', 'local_offlinequizaddons'));
-
 // Process the temporal convector
 $processor = new \local_offlinequizaddons\temporal_processor($offlinequiz);
 

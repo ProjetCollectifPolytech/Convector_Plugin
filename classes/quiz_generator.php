@@ -309,17 +309,6 @@ class quiz_generator extends base_generator {
                 }
             }
             
-            // === Add blank pages if needed for normalization ===
-            // Count actual pages generated so far
-            $actualpages = $pdf->getNumPages();
-            $targetpages = $data['targetpages'];
-            $blankpages = $targetpages - $actualpages;
-            
-            if ($blankpages > 0) {
-                for ($i = 0; $i < $blankpages; $i++) {
-                    $pdf->AddPage();
-                }
-            }
             
             // Save PDF to temp directory
             $date = usergetdate(time());

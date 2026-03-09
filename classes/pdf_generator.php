@@ -29,6 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/pdflib.php');
 require_once($CFG->dirroot . '/mod/offlinequiz/pdflib.php');
 require_once($CFG->dirroot . '/mod/offlinequiz/locallib.php');
+require_once($CFG->dirroot . '/mod/assign/feedback/editpdf/fpdi/autoload.php');
 
 // Include generator classes
 require_once(__DIR__ . '/base_generator.php');
@@ -118,22 +119,31 @@ class pdf_generator {
         foreach ($blankpages as $groupid => $data) {
             file_put_contents($logfile, "Processing group $groupid...\n", FILE_APPEND);
             
-            // Generate main question sheet with normalization
+            // Generate questionnaire and answer sheet, then merge them in one file.
             $pdfpath = $this->quiz_generator->generate($groupid, $data);
-            
-            if ($pdfpath && file_exists($pdfpath)) {
-                $size = filesize($pdfpath);
-                file_put_contents($logfile, "  PDF created: $pdfpath (size: $size bytes)\n", FILE_APPEND);
-                $pdffiles[] = ['path' => $pdfpath, 'type' => 'questionnaire'];
-            } else {
-                file_put_contents($logfile, "  FAILED to create PDF for group $groupid\n", FILE_APPEND);
-            }
-            
-            // Generate answer sheet
             $answersheet = $this->answer_sheet_generator->generate($groupid, $data);
-            if ($answersheet && file_exists($answersheet)) {
-                file_put_contents($logfile, "  Answer sheet created: $answersheet\n", FILE_APPEND);
-                $pdffiles[] = ['path' => $answersheet, 'type' => 'grille'];
+
+            if ($pdfpath && file_exists($pdfpath) && $answersheet && file_exists($answersheet)) {
+                $mergedpath = $this->merge_questionnaire_with_answer_sheet(
+                    $groupid,
+                    $pdfpath,
+                    $answersheet,
+                    (int)$data['blankpages']
+                );
+
+                if ($mergedpath && file_exists($mergedpath)) {
+                    $size = filesize($mergedpath);
+                    file_put_contents($logfile, "  Merged PDF created: $mergedpath (size: $size bytes)\n", FILE_APPEND);
+                    $pdffiles[] = ['path' => $mergedpath, 'type' => 'questionnaire'];
+                } else {
+                    file_put_contents($logfile, "  FAILED to merge questionnaire + answer sheet for group $groupid\n", FILE_APPEND);
+                }
+
+                // Intermediate files are no longer needed once the merged file exists.
+                @unlink($pdfpath);
+                @unlink($answersheet);
+            } else {
+                file_put_contents($logfile, "  FAILED to create questionnaire or answer sheet for group $groupid\n", FILE_APPEND);
             }
             
             // Generate correction form with normalization
@@ -183,7 +193,6 @@ class pdf_generator {
         // Map file types to folder names
         $folderMap = [
             'questionnaire' => 'Questionnaires',
-            'grille' => 'Grilles de réponses',
             'correction' => 'Formulaires de correction'
         ];
         
@@ -224,6 +233,79 @@ class pdf_generator {
         }
 
         return $zippath;
+    }
+
+    /**
+     * Merge questionnaire and answer sheet into one PDF, then append blank pages.
+     *
+     * Blank pages are appended after the answer sheet so the final rendering order is:
+     * questionnaire -> answer sheet -> normalization blanks.
+     *
+     * @param int $groupid The offlinequiz group id
+     * @param string $questionnairepath Path to questionnaire PDF
+     * @param string $answersheetpath Path to answer sheet PDF
+     * @param int $blankpages Number of normalization blank pages to append
+     * @return string|false Path to merged PDF file or false on failure
+     */
+    private function merge_questionnaire_with_answer_sheet($groupid, $questionnairepath, $answersheetpath, $blankpages) {
+        global $DB;
+
+        $logfile = $this->tempdir . DIRECTORY_SEPARATOR . 'generation_log.txt';
+
+        try {
+            $group = $DB->get_record('offlinequiz_groups', ['id' => $groupid], '*', MUST_EXIST);
+            $letterstr = 'abcdefghijklmnopqrstuvwxyz';
+            $groupletter = strtoupper($letterstr[$group->groupnumber - 1]);
+
+            $date = usergetdate(time());
+            $timestamp = sprintf(
+                '%04d%02d%02d_%02d%02d%02d',
+                $date['year'],
+                $date['mon'],
+                $date['mday'],
+                $date['hours'],
+                $date['minutes'],
+                $date['seconds']
+            );
+
+            $mergedfilename = get_string('fileprefixform', 'offlinequiz') . '_' . $groupletter . '_merged_' . $timestamp . '.pdf';
+            $mergedpath = $this->tempdir . DIRECTORY_SEPARATOR . $mergedfilename;
+
+            $pdf = new \setasign\Fpdi\Tcpdf\Fpdi('P', 'mm', 'A4');
+            $pdf->setPrintHeader(false);
+            $pdf->setPrintFooter(false);
+            $pdf->SetMargins(0, 0, 0);
+            $pdf->SetAutoPageBreak(false);
+
+            $sourcefiles = [$questionnairepath, $answersheetpath];
+            foreach ($sourcefiles as $sourcefile) {
+                $pagecount = $pdf->setSourceFile($sourcefile);
+                for ($pagenumber = 1; $pagenumber <= $pagecount; $pagenumber++) {
+                    $templateid = $pdf->importPage($pagenumber);
+                    $templatesize = $pdf->getTemplateSize($templateid);
+                    $pdf->AddPage($templatesize['orientation'], [$templatesize['width'], $templatesize['height']]);
+                    $pdf->useTemplate($templateid);
+                }
+            }
+
+            for ($i = 0; $i < $blankpages; $i++) {
+                $pdf->AddPage('P', 'A4');
+            }
+
+            $pdfcontent = $pdf->Output('', 'S');
+            if (file_put_contents($mergedpath, $pdfcontent) === false) {
+                return false;
+            }
+
+            return $mergedpath;
+        } catch (\Throwable $e) {
+            file_put_contents(
+                $logfile,
+                '  Merge error for group ' . $groupid . ': ' . $e->getMessage() . "\n",
+                FILE_APPEND
+            );
+            return false;
+        }
     }
 
     /**

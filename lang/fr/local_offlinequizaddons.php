@@ -47,6 +47,7 @@ $string['final_pages'] = 'Pages finales';
 $string['pages'] = 'Pages';
 $string['group'] = 'Groupe';
 $string['generate_normalized_pdfs'] = 'Générer les PDF normalisés';
+$string['final_pages_info'] = 'Nombre de pages : {$a}';
 $string['no_normalization_needed'] = 'Toutes les copies d\'examen ont déjà le même nombre de pages. Aucune normalisation n\'est nécessaire.';
 $string['temporal_info'] = 'Cet examen comporte actuellement {$a->currentpages} pages et sera normalisé à {$a->targetpages} pages.';
 $string['blankpage'] = 'Page blanche pour la normalisation';

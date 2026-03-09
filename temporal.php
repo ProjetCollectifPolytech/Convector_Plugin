@@ -220,6 +220,7 @@ if (!$processor->validate()) {
             'action' => 'generate',
             'download' => 1
         ]);
+        $finalpagecount = $analysis['maxpages'] + 2;
         
         echo html_writer::start_tag('form', ['method' => 'post', 'action' => $generateurl->out_omit_querystring()]);
         foreach ($generateurl->params() as $key => $value) {
@@ -231,6 +232,11 @@ if (!$processor->validate()) {
             'class' => 'btn',
             'style' => 'background-color: #0f6cbf; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer;'
         ]);
+        echo html_writer::div(
+            get_string('final_pages_info', 'local_offlinequizaddons', $finalpagecount),
+            '',
+            ['style' => 'margin-top: 8px; color: #555; font-size: 14px;']
+        );
         echo html_writer::end_tag('form');
     } else {
         echo html_writer::div(

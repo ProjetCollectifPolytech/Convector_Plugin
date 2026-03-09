@@ -280,7 +280,7 @@ class correction_generator extends base_generator {
             // Add blank pages for normalization
             // Count actual pages generated so far
             $actualpages = $pdf->getNumPages();
-            $targetpages = $data['targetpages'];
+            $targetpages = $data['targetpages'] - 1;
             $blankpages = $targetpages - $actualpages;
             
             if ($blankpages > 0) {

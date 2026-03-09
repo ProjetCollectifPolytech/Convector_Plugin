@@ -276,7 +276,7 @@ class temporal_processor {
                 'groupname' => $data['groupname'],
                 'currentpages' => $data['totalpages'],
                 'blankpages' => $needed,
-                'targetpages' => $analysis['maxpages'] + 1  // +1 for cover page
+                'targetpages' => $analysis['maxpages'] + 2  // +1 for cover page, +1 for answer sheet
             ];
         }
 

@@ -38,6 +38,62 @@ require_once(__DIR__ . '/answer_sheet_generator.php');
 require_once(__DIR__ . '/correction_generator.php');
 
 /**
+ * FPDI wrapper that rewrites a single page number in the bottom margin.
+ */
+class merged_questionnaire_pdf extends \setasign\Fpdi\Tcpdf\Fpdi {
+
+    /** @var array<int, string> Page source types keyed by merged page number */
+    private $pagetypes = [];
+
+    /**
+     * Remember the source type for the current merged page.
+     *
+     * @param string $type
+     * @return void
+     */
+    public function register_page_type($type) {
+        $this->pagetypes[$this->PageNo()] = $type;
+    }
+
+    /**
+     * Get the source type for the current page.
+     *
+     * @return string
+     */
+    private function get_current_page_type() {
+        return $this->pagetypes[$this->PageNo()] ?? 'questionnaire';
+    }
+
+    /**
+     * Render a single footer for the merged document and cover source pagination.
+     */
+    public function Footer() {
+        $pagewidth = $this->getPageWidth();
+        $pageheight = $this->getPageHeight();
+        $pagetype = $this->get_current_page_type();
+
+        $this->SetFillColor(255, 255, 255);
+
+        if ($pagetype === 'answer_sheet') {
+            $this->Rect(($pagewidth - 60) / 2, $pageheight - 16, 60, 8, 'F');
+        } else {
+            $this->Rect(($pagewidth - 70) / 2, $pageheight - 28, 70, 16, 'F');
+        }
+
+        $this->SetY(-11);
+        $this->SetFont(offlinequiz_get_pdffont(), 'I', 8);
+        $this->Cell(
+            0,
+            4,
+            offlinequiz_str_html_pdf(get_string('page')) . ' ' . $this->getAliasNumPage() . '/' . $this->getAliasNbPages(),
+            0,
+            0,
+            'C'
+        );
+    }
+}
+
+/**
  * PDF Generator for creating normalized exam copies using offlinequiz format.
  *
  * This class generates PDF files with normalized page counts while maintaining
@@ -62,6 +118,16 @@ class pdf_generator {
 
     /** @var correction_generator Correction generator instance */
     private $correction_generator;
+
+    /**
+     * Build a path inside the temp directory using the platform separator.
+     *
+     * @param string $filename File name relative to the temp directory
+     * @return string
+     */
+    private function build_temp_path($filename) {
+        return rtrim($this->tempdir, '\\/') . DIRECTORY_SEPARATOR . $filename;
+    }
 
     /**
      * Constructor.
@@ -108,7 +174,7 @@ class pdf_generator {
         global $CFG;
 
         // Create log file for debugging
-        $logfile = $this->tempdir . DIRECTORY_SEPARATOR . 'generation_log.txt';
+        $logfile = $this->build_temp_path('generation_log.txt');
         file_put_contents($logfile, "=== PDF Generation Log ===\n" . date('Y-m-d H:i:s') . "\n\n", FILE_APPEND);
 
         $blankpages = $this->processor->calculate_blank_pages();
@@ -140,8 +206,14 @@ class pdf_generator {
                 }
 
                 // Intermediate files are no longer needed once the merged file exists.
-                @unlink($pdfpath);
-                @unlink($answersheet);
+                // The merged questionnaire can reuse the original questionnaire path,
+                // so avoid deleting the final file by mistake.
+                if ($pdfpath !== $mergedpath) {
+                    @unlink($pdfpath);
+                }
+                if ($answersheet !== $mergedpath) {
+                    @unlink($answersheet);
+                }
             } else {
                 file_put_contents($logfile, "  FAILED to create questionnaire or answer sheet for group $groupid\n", FILE_APPEND);
             }
@@ -179,10 +251,10 @@ class pdf_generator {
      * @return string Path to the ZIP file
      */
     private function create_zip_archive($pdffiles) {
-        $logfile = $this->tempdir . DIRECTORY_SEPARATOR . 'generation_log.txt';
+        $logfile = $this->build_temp_path('generation_log.txt');
         
         $zipfilename = 'offlinequiz_' . $this->offlinequiz->id . '_normalized_' . time() . '.zip';
-        $zippath = $this->tempdir . DIRECTORY_SEPARATOR . $zipfilename;
+        $zippath = $this->build_temp_path($zipfilename);
 
         $zip = new \ZipArchive();
         $result = $zip->open($zippath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
@@ -197,8 +269,12 @@ class pdf_generator {
         ];
         
         if ($result === true) {
+            foreach ($folderMap as $folder) {
+                $zip->addEmptyDir($folder);
+            }
+
             foreach ($pdffiles as $fileinfo) {
-                $normalizedpath = str_replace('/', DIRECTORY_SEPARATOR, $fileinfo['path']);
+                $normalizedpath = $fileinfo['path'];
                 
                 file_put_contents($logfile, "  Checking file: $normalizedpath\n", FILE_APPEND);
                 
@@ -235,7 +311,6 @@ class pdf_generator {
         return $zippath;
     }
 
-    
     /**
      * Merge questionnaire and answer sheet into one PDF, then append blank pages.
      *
@@ -251,7 +326,7 @@ class pdf_generator {
     private function merge_questionnaire_with_answer_sheet($groupid, $questionnairepath, $answersheetpath, $blankpages) {
         global $DB;
 
-        $logfile = $this->tempdir . DIRECTORY_SEPARATOR . 'generation_log.txt';
+            $logfile = $this->build_temp_path('generation_log.txt');
 
         try {
             $group = $DB->get_record('offlinequiz_groups', ['id' => $groupid], '*', MUST_EXIST);
@@ -269,101 +344,33 @@ class pdf_generator {
                 $date['seconds']
             );
 
-            $mergedfilename = get_string('fileprefixform', 'offlinequiz') . '_' . $groupletter . '_merged_' . $timestamp . '.pdf';
-            $mergedpath = $this->tempdir . DIRECTORY_SEPARATOR . $mergedfilename;
+            $mergedfilename = get_string('fileprefixform', 'offlinequiz') . '_' . $groupletter . '_' . $timestamp . '.pdf';
+            $mergedpath = $this->build_temp_path($mergedfilename);
 
-            $pdf = new \setasign\Fpdi\Tcpdf\Fpdi('P', 'mm', 'A4');
+            $pdf = new merged_questionnaire_pdf('P', 'mm', 'A4');
             $pdf->setPrintHeader(false);
-            $pdf->setPrintFooter(false);
             $pdf->SetMargins(0, 0, 0);
             $pdf->SetAutoPageBreak(false);
 
-            $sourcefiles = [$questionnairepath, $answersheetpath];
-            foreach ($sourcefiles as $sourcefile) {
+            $sourcefiles = [
+                ['path' => $questionnairepath, 'type' => 'questionnaire'],
+                ['path' => $answersheetpath, 'type' => 'answer_sheet'],
+            ];
+            foreach ($sourcefiles as $sourcefileinfo) {
+                $sourcefile = $sourcefileinfo['path'];
                 $pagecount = $pdf->setSourceFile($sourcefile);
                 for ($pagenumber = 1; $pagenumber <= $pagecount; $pagenumber++) {
                     $templateid = $pdf->importPage($pagenumber);
                     $templatesize = $pdf->getTemplateSize($templateid);
                     $pdf->AddPage($templatesize['orientation'], [$templatesize['width'], $templatesize['height']]);
+                    $pdf->register_page_type($sourcefileinfo['type']);
                     $pdf->useTemplate($templateid);
                 }
             }
 
             for ($i = 0; $i < $blankpages; $i++) {
                 $pdf->AddPage('P', 'A4');
-            }
-
-            $pdfcontent = $pdf->Output('', 'S');
-            if (file_put_contents($mergedpath, $pdfcontent) === false) {
-                return false;
-            }
-
-            return $mergedpath;
-        } catch (\Throwable $e) {
-            file_put_contents(
-                $logfile,
-                '  Merge error for group ' . $groupid . ': ' . $e->getMessage() . "\n",
-                FILE_APPEND
-            );
-            return false;
-        }
-    }
-
-    /**
-     * Merge questionnaire and answer sheet into one PDF, then append blank pages.
-     *
-     * Blank pages are appended after the answer sheet so the final rendering order is:
-     * questionnaire -> answer sheet -> normalization blanks.
-     *
-     * @param int $groupid The offlinequiz group id
-     * @param string $questionnairepath Path to questionnaire PDF
-     * @param string $answersheetpath Path to answer sheet PDF
-     * @param int $blankpages Number of normalization blank pages to append
-     * @return string|false Path to merged PDF file or false on failure
-     */
-    private function merge_questionnaire_with_answer_sheet($groupid, $questionnairepath, $answersheetpath, $blankpages) {
-        global $DB;
-
-        $logfile = $this->tempdir . DIRECTORY_SEPARATOR . 'generation_log.txt';
-
-        try {
-            $group = $DB->get_record('offlinequiz_groups', ['id' => $groupid], '*', MUST_EXIST);
-            $letterstr = 'abcdefghijklmnopqrstuvwxyz';
-            $groupletter = strtoupper($letterstr[$group->groupnumber - 1]);
-
-            $date = usergetdate(time());
-            $timestamp = sprintf(
-                '%04d%02d%02d_%02d%02d%02d',
-                $date['year'],
-                $date['mon'],
-                $date['mday'],
-                $date['hours'],
-                $date['minutes'],
-                $date['seconds']
-            );
-
-            $mergedfilename = get_string('fileprefixform', 'offlinequiz') . '_' . $groupletter . '_merged_' . $timestamp . '.pdf';
-            $mergedpath = $this->tempdir . DIRECTORY_SEPARATOR . $mergedfilename;
-
-            $pdf = new \setasign\Fpdi\Tcpdf\Fpdi('P', 'mm', 'A4');
-            $pdf->setPrintHeader(false);
-            $pdf->setPrintFooter(false);
-            $pdf->SetMargins(0, 0, 0);
-            $pdf->SetAutoPageBreak(false);
-
-            $sourcefiles = [$questionnairepath, $answersheetpath];
-            foreach ($sourcefiles as $sourcefile) {
-                $pagecount = $pdf->setSourceFile($sourcefile);
-                for ($pagenumber = 1; $pagenumber <= $pagecount; $pagenumber++) {
-                    $templateid = $pdf->importPage($pagenumber);
-                    $templatesize = $pdf->getTemplateSize($templateid);
-                    $pdf->AddPage($templatesize['orientation'], [$templatesize['width'], $templatesize['height']]);
-                    $pdf->useTemplate($templateid);
-                }
-            }
-
-            for ($i = 0; $i < $blankpages; $i++) {
-                $pdf->AddPage('P', 'A4');
+                $pdf->register_page_type('blank');
             }
 
             $pdfcontent = $pdf->Output('', 'S');

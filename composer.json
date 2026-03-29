@@ -1,0 +1,22 @@
+{
+    "name": "projetcollectifpolytech/local-offlinequizaddons",
+    "description": "Quality tooling for the Temporal Convector Moodle local plugin.",
+    "type": "project",
+    "require-dev": {
+        "moodlehq/moodle-cs": "^3.7"
+    },
+    "scripts": {
+        "quality-guard": "@php tools/quality_guard.php",
+        "phpcs": "phpcs --standard=phpcs.xml.dist",
+        "quality": [
+            "@quality-guard",
+            "@phpcs"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "sort-packages": true
+    }
+}

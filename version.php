@@ -15,20 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for local_offlinequizaddons plugin.
+ * Version information for local_offlinequizaddons.
  *
  * @package    local_offlinequizaddons
- * @copyright  2025
+ * @copyright  2026
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_offlinequizaddons';
-$plugin->version = 2025121100;  // YYYYMMDDXX format
-$plugin->requires = 2022041900; // Moodle 4.0+ required
+$plugin->version = 2026032900;
+$plugin->requires = 2024100700;
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '1.0.0';
+$plugin->release = '1.1.0';
 $plugin->dependencies = [
-    'mod_offlinequiz' => ANY_VERSION, // Requires mod_offlinequiz to be installed
+    'mod_offlinequiz' => ANY_VERSION,
 ];

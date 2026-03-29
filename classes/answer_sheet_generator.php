@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Answer Sheet Generator class for creating answer sheet PDFs.
+ * Generator for answer-sheet PDFs.
  *
  * @package    local_offlinequizaddons
  * @copyright  2026
@@ -31,80 +31,55 @@ require_once($CFG->dirroot . '/mod/offlinequiz/pdflib.php');
 require_once($CFG->dirroot . '/mod/offlinequiz/locallib.php');
 
 /**
- * Generator for creating answer sheet PDFs using offlinequiz format.
+ * Delegates answer-sheet generation to the native OfflineQuiz helper.
  */
 class answer_sheet_generator extends base_generator {
-
     /**
-     * Generate answer sheet using offlinequiz format.
+     * Generate one answer sheet PDF.
      *
-     * @param int $groupid The group ID
-     * @param array $data Group data
-     * @return string|false Path to the PDF file or false on failure
+     * @param int $groupid OfflineQuiz group id
+     * @param array $data Group normalization data
+     * @return string|false
      */
     public function generate($groupid, $data) {
-        global $DB, $CFG, $USER;
+        $groupcontext = $this->load_group_context((int) $groupid);
+        if ($groupcontext === null) {
+            return false;
+        }
+
+        $answerfile = null;
 
         try {
-            // Get the group
-            $group = $DB->get_record('offlinequiz_groups', ['id' => $groupid]);
-            if (!$group) {
-                return false;
-            }
-            
-            // Get course and context
-            $course = $DB->get_record('course', ['id' => $this->offlinequiz->course]);
-            $cm = get_coursemodule_from_instance('offlinequiz', $this->offlinequiz->id, $course->id);
-            $context = \context_module::instance($cm->id);
-            
-            // Get the template usage
-            $templateusage = offlinequiz_get_group_template_usage($this->offlinequiz, $group, $context);
-            if (!$templateusage) {
-                return false;
-            }
-            
-            // Get max answers
-            $maxanswers = offlinequiz_get_maxanswers($this->offlinequiz, array($group));
-            
-            // Use the original offlinequiz function to generate the answer PDF
-            // But save it to our temp directory instead
+            $maxanswers = offlinequiz_get_maxanswers($this->offlinequiz, [$groupcontext['group']]);
             $answerfile = offlinequiz_create_pdf_answer(
                 $maxanswers,
-                $templateusage,
+                $groupcontext['templateusage'],
                 $this->offlinequiz,
-                $group,
-                $course->id,
-                $context
+                $groupcontext['group'],
+                $groupcontext['course']->id,
+                $groupcontext['context']
             );
-            
             if (!$answerfile) {
                 return false;
             }
-            
-            // Copy the file from Moodle file storage to our temp directory
-            $letterstr = ' abcdefghijklmnopqrstuvwxyz';
-            $groupletter = strtoupper($letterstr[$group->groupnumber]);
-            
-            $date = usergetdate(time());
-            $timestamp = sprintf('%04d%02d%02d_%02d%02d%02d',
-                    $date['year'], $date['mon'], $date['mday'], $date['hours'], $date['minutes'], $date['seconds']);
-            
-            $filename = get_string('fileprefixanswer', 'offlinequiz') . '_' . $groupletter . '_' . $timestamp . '.pdf';
-            $filepath = $this->tempdir . DIRECTORY_SEPARATOR . $filename;
-            
-            // Copy file content
-            $content = $answerfile->get_content();
-            if (file_put_contents($filepath, $content) === false) {
-                return false;
-            }
-            
-            // Delete the temp file from Moodle storage
-            $answerfile->delete();
-            
-            return $filepath;
-            
-        } catch (\Exception $e) {
+
+            $filepath = $this->create_timestamped_file_path(
+                get_string('fileprefixanswer', 'offlinequiz'),
+                $groupcontext['groupletter']
+            );
+
+            return file_put_contents($filepath, $answerfile->get_content()) === false ? false : $filepath;
+        } catch (\Throwable $e) {
+            debugging(
+                'Temporal Convector failed to generate answer sheet for group ' .
+                $groupcontext['group']->id . ': ' . $e->getMessage(),
+                DEBUG_DEVELOPER
+            );
             return false;
+        } finally {
+            if (is_object($answerfile) && method_exists($answerfile, 'delete')) {
+                $answerfile->delete();
+            }
         }
     }
 }

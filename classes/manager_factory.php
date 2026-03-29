@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Generator for normalized questionnaire PDFs.
+ * Composition root for the Temporal Convector facade.
  *
  * @package    local_offlinequizaddons
  * @copyright  2026
@@ -24,28 +24,35 @@
 
 namespace local_offlinequizaddons;
 
+use local_offlinequizaddons\service\offlinequiz_question_repository;
+use local_offlinequizaddons\service\pdf_generation_service;
+use local_offlinequizaddons\service\temporal_analysis_service;
+
 /**
- * Generates the question-sheet part of the normalized archive.
+ * Builds fully-wired manager instances.
  */
-class quiz_generator extends question_pdf_generator_base {
+class manager_factory {
     /**
-     * {@inheritDoc}
+     * Create a default manager instance.
+     *
+     * @return manager
      */
-    protected function get_cover_heading_string_identifier(): string {
-        return 'questionsheet';
+    public static function create_default(): manager {
+        return (new self())->create();
     }
 
     /**
-     * {@inheritDoc}
+     * Build one manager with the plugin's standard dependency graph.
+     *
+     * @return manager
      */
-    protected function get_output_prefix_string_identifier(): string {
-        return 'fileprefixform';
-    }
+    public function create(): manager {
+        $repository = new offlinequiz_question_repository();
+        $analysisservice = new temporal_analysis_service($repository);
 
-    /**
-     * {@inheritDoc}
-     */
-    protected function should_render_correction_answers(): bool {
-        return false;
+        return new manager(
+            $analysisservice,
+            new pdf_generation_service()
+        );
     }
 }

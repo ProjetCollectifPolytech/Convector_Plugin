@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * English language strings for local_offlinequizaddons plugin.
+ * English language strings for local_offlinequizaddons.
  *
  * @package    local_offlinequizaddons
- * @copyright  2025
+ * @copyright  2026
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,38 +26,24 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'OfflineQuiz Addons';
 $string['offlinequizaddons:view'] = 'View OfflineQuiz addons';
-$string['tabname'] = 'Addons';
-$string['helloworld'] = 'Hello World';
-$string['welcome'] = 'Welcome to OfflineQuiz Addons';
-$string['mainpagetitle'] = 'OfflineQuiz Addons';
+$string['offlinequizaddons:generate'] = 'Generate normalized OfflineQuiz archives';
 
-// Temporal Convector strings
 $string['temporal_convector'] = 'Temporal Convector';
-$string['temporal_convector_link'] = 'Download data from temporal convector';
-$string['temporal_description'] = 'The Temporal Convector normalizes the number of pages across all exam copies. This ensures that all exam copies have the same number of pages, preventing layout inconsistencies.';
-$string['analysis_summary'] = 'Analysis Summary';
-$string['group_analysis'] = 'Group Analysis';
-$string['question_details'] = 'Question Details';
-$string['max_pages'] = 'Maximum pages';
-$string['needs_normalization'] = 'Needs normalization';
+$string['temporal_description'] = 'Temporal Convector normalizes the number of pages across all OfflineQuiz groups so every generated copy follows the same pagination.';
+$string['group_analysis'] = 'Group analysis';
+$string['question_details'] = 'Question details';
 $string['question_count'] = 'Number of questions';
 $string['current_pages'] = 'Current pages';
 $string['blank_pages_needed'] = 'Blank pages needed';
 $string['final_pages'] = 'Final pages';
 $string['pages'] = 'Pages';
 $string['group'] = 'Group';
-$string['generate_normalized_pdfs'] = 'Generate Normalized PDFs';
+$string['generate_normalized_pdfs'] = 'Generate normalized PDFs';
+$string['cannot_generate_normalized_pdfs'] = 'You can review the Temporal Convector analysis, but you do not have permission to generate the normalized archive.';
 $string['final_pages_info'] = 'Number of pages: {$a}';
 $string['no_normalization_needed'] = 'All exam copies already have the same number of pages. No normalization is needed.';
-$string['temporal_info'] = 'This exam currently has {$a->currentpages} pages and will be normalized to {$a->targetpages} pages.';
-$string['blankpage'] = 'Blank page for normalization';
 
-// Instructions for PDF cover page
-$string['instructions'] = 'Instructions';
-$string['instructions_text'] = "- Fill out the form completely\n- Mark your answers clearly\n- Use only black or blue pen\n- Do not fold or damage this form";
-
-// Error messages
-$string['error_no_offlinequiz'] = 'Error: No offline quiz found.';
-$string['error_no_questions'] = 'Error: This exam does not contain any questions. At least one question is required.';
-$string['error_invalid_question_type'] = 'Error: Question type "{$a}" is not compatible. Only multiple choice and essay questions are supported.';
-$string['error_pdf_generation'] = 'Error: Failed to generate PDF files. Please try again.';
+$string['error_no_offlinequiz'] = 'Error: no OfflineQuiz activity was found.';
+$string['error_no_questions'] = 'Error: this exam does not contain any questions. At least one question is required.';
+$string['error_invalid_question_type'] = 'Error: question type "{$a}" is not compatible. Only multichoice, essay, shortanswer and truefalse are supported.';
+$string['error_pdf_generation'] = 'Error: failed to generate PDF files. Please try again.';

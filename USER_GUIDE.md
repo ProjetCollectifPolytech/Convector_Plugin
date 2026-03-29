@@ -1,151 +1,79 @@
 # Temporal Convector - User Guide
 
-## 1. Overview
+## Overview
 
-The **Temporal Convector** is a feature of the OfflineQuiz Addons plugin for Moodle.
+Temporal Convector normalizes OfflineQuiz output so every group ends up with the same page count.
 
-Its goal is to **normalize exam copy lengths** across all OfflineQuiz groups so every generated exam copy has the same total number of pages.
+It is useful when:
 
-This is useful when:
-- different groups contain different page counts,
-- printing and distribution must stay consistent (to staple the copies together, for example).
+- groups have different question-page layouts
+- all printed copies must be physically aligned
+- correction packages must follow the same pagination logic
 
----
+## What the plugin produces
 
-## 2. What the feature does
+For one OfflineQuiz activity, the plugin can generate a ZIP archive containing:
 
-For one OfflineQuiz activity, the Temporal Convector:
+- normalized questionnaires
+- native OfflineQuiz answer sheets
+- normalized correction forms
 
-1. Analyzes all groups and their question page distribution.
-2. Detects the group with the highest page count.
-3. Calculates how many blank pages must be added to each other group.
-4. Generates a ZIP package containing, for each group:
-   - a normalized **Question Sheet** PDF,
-   - an **Answer Sheet** PDF,
-   - a normalized **Correction Form** PDF.
+## Access
 
----
+Two capabilities control the feature:
 
-## 3. Access and permissions
-
-### Required capability
-You must have the Moodle capability:
 - `local/offlinequizaddons:view`
+- `local/offlinequizaddons:generate`
 
-By default, it is typically granted to:
-- Teacher
-- Editing teacher
-- Manager
+Users with view access can inspect the analysis page. Users with generate access can also download the archive.
 
-### Where to find the link
-After creating an OfflineQuiz activity, make sure to create at least one quiz. Get to the **"Preparation"** tab where you'll find the button **"Download data from Temporal Convector"** that will lead to the Temporal Convector page.
+## Typical workflow
 
----
+1. Open the OfflineQuiz activity.
+2. Open the Temporal Convector page from the plugin navigation entry.
+3. Review the group analysis table.
+4. Inspect question details if needed.
+5. Generate the ZIP archive when normalization is required.
 
-## 4. Preconditions
+## Analysis screen
 
-Before running the Temporal Convector, ensure:
+The page shows, for each group:
 
-- the OfflineQuiz activity exists and is accessible,
-- at least one question is present,
-- question types are compatible.
+- question count
+- current page count
+- blank pages required
+- final normalized page count
 
-Supported question types in the current implementation:
-- Multichoices
-- Essays
-- Shortanswers
-- True or False
+If all groups already match, generation is not proposed.
 
-If the activity is invalid, the page shows an error and generation is blocked.
+## Preconditions
 
----
+Before launching generation:
 
-## 5. Step-by-step usage
+- the OfflineQuiz activity must exist
+- groups must contain questions
+- question types must be supported by the current implementation
 
-1. Open your OfflineQuiz activity.
-2. Open the **Preparation** tab.
-3. Open the **Temporal Convector** page.
-4. Review the **Group Analysis** table :
-   - Question count
-   - Current pages
-   - Blank pages needed
-   - Final pages
-5. Expand **Question Details** to inspect per-question page placement.
-6. If normalization is needed, click **Generate Normalized PDFs**.
-7. Download the generated ZIP file.
+Currently accepted question types:
 
-If all groups already have the same number of pages, the page shows a success message and no generation button is displayed.
+- `multichoice`
+- `essay`
+- `shortanswer`
+- `truefalse`
 
----
+## Error handling
 
-## 6. Understanding the analysis results
+Generation is blocked when:
 
-### Current pages
-Calculated from existing question page assignments per group.
+- the activity cannot be resolved
+- no group contains questions
+- an unsupported question type is detected
+- PDF or ZIP generation fails
 
-### Blank pages needed
-Number of extra pages required so the group reaches the common target.
+In these cases, the page displays Moodle notifications instead of returning partial files.
 
-### Final pages
-Target page count after normalization. In the current logic, this includes cover/page-structure alignment used by PDF generation.
+## Version Context
 
-Rows highlighted in red indicate groups that need added blank pages.
-
----
-
-## 7. Generated ZIP content
-
-The ZIP archive contains subfolders:
-
-- `Questionnaires/`
-- `Grilles de réponses/`
-- `Formulaires de correction/`
-
-Each folder includes one PDF per group (A, B, C, etc... depending on group numbering).
-
----
-
-## 8. Notes on page behavior
-
-- Normalization is applied to **question sheets** and **correction forms** by adding blank pages when needed.
-- Correction generation uses non-shuffled rendering internally to preserve explicit teacher-defined page breaks.
-- Answer sheets are generated using native OfflineQuiz logic.
-
----
-
-## 9. Error handling and troubleshooting
-
-### “No offline quiz found”
-The activity reference is missing or invalid.
-
-### “This exam does not contain any questions”
-Add at least one question to the OfflineQuiz groups.
-
-### “Question type is not compatible”
-Replace unsupported question types with supported ones.
-
-### “Failed to generate PDF files”
-Possible causes:
-- temporary file issue,
-- PDF generation failure for one or more groups,
-- ZIP creation/read failure.
-
-Try again after checking:
-- OfflineQuiz configuration,
-- group-question assignments,
-- server write access to Moodle temp directories.
-
----
-
-## 10. Best practices
-
-- Finalize group/question layout before generation.
-- Keep page assignments clean and intentional in OfflineQuiz editing.
-- Test generation once before mass printing.
-
----
-
-## 11. Version context
-
-Plugin component: `local_offlinequizaddons`  
-Release line observed: `1.0.0`
+- Component: `local_offlinequizaddons`
+- Moodle target: `4.5+`
+- Release line: `1.1.0`

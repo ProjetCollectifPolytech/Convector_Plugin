@@ -15,38 +15,31 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Renderer for local_offlinequizaddons plugin.
+ * PHPUnit bootstrap for local_offlinequizaddons.
  *
  * @package    local_offlinequizaddons
- * @copyright  2025
+ * @category   test
+ * @copyright  2026
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-namespace local_offlinequizaddons\output;
 
 defined('MOODLE_INTERNAL') || die();
 
-use plugin_renderer_base;
+$dir = __DIR__;
+$moodleroot = null;
 
-/**
- * Renderer class for OfflineQuiz Addons.
- *
- * This renderer handles the display of templates for the plugin.
- *
- * @package    local_offlinequizaddons
- * @copyright  2025
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class renderer extends plugin_renderer_base {
-
-    /**
-     * Render the main page.
-     *
-     * @param mainpage $page The mainpage renderable
-     * @return string HTML output
-     */
-    public function render_mainpage(mainpage $page) {
-        $data = $page->export_for_template($this);
-        return $this->render_from_template('local_offlinequizaddons/mainpage', $data);
+for ($i = 0; $i < 6; $i++) {
+    $dir = dirname($dir);
+    if (file_exists($dir . '/config.php') && file_exists($dir . '/lib/setup.php')) {
+        $moodleroot = $dir;
+        break;
     }
 }
+
+if ($moodleroot === null) {
+    echo "ERROR: Could not locate Moodle root directory.\n";
+    echo "Make sure the plugin is installed at {moodle_root}/local/offlinequizaddons/\n";
+    exit(1);
+}
+
+require_once($moodleroot . '/lib/phpunit/bootstrap.php');

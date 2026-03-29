@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base Generator class for PDF generation - provides common functionality.
+ * Base generator for PDF artifacts.
  *
  * @package    local_offlinequizaddons
  * @copyright  2026
@@ -24,32 +24,90 @@
 
 namespace local_offlinequizaddons;
 
-defined('MOODLE_INTERNAL') || die();
+use local_offlinequizaddons\service\offlinequiz_group_context_loader;
+use stdClass;
 
 /**
- * Base generator class with common functionality for all PDF generators.
+ * Base generator class with shared state for PDF generation.
  */
 abstract class base_generator {
+    /** @var stdClass */
+    protected stdClass $offlinequiz;
 
-    /** @var object The offlinequiz instance */
-    protected $offlinequiz;
+    /** @var string */
+    protected string $tempdir;
 
-    /** @var temporal_processor The processor */
-    protected $processor;
-
-    /** @var string Temporary directory for PDFs */
-    protected $tempdir;
+    /** @var offlinequiz_group_context_loader */
+    private offlinequiz_group_context_loader $groupcontextloader;
 
     /**
      * Constructor.
      *
-     * @param object $offlinequiz The offlinequiz instance
-     * @param temporal_processor $processor The temporal processor
-     * @param string $tempdir The temporary directory
+     * @param stdClass $offlinequiz OfflineQuiz activity
+     * @param string $tempdir Temporary directory
      */
-    public function __construct($offlinequiz, $processor, $tempdir) {
+    public function __construct(
+        stdClass $offlinequiz,
+        string $tempdir,
+        ?offlinequiz_group_context_loader $groupcontextloader = null
+    ) {
         $this->offlinequiz = $offlinequiz;
-        $this->processor = $processor;
         $this->tempdir = $tempdir;
+        $this->groupcontextloader = $groupcontextloader ?? new offlinequiz_group_context_loader();
+    }
+
+    /**
+     * Load the Moodle records needed to generate one group artifact.
+     *
+     * @param int $groupid OfflineQuiz group id
+     * @return array<string, mixed>|null
+     */
+    protected function load_group_context(int $groupid): ?array {
+        return $this->groupcontextloader->load($this->offlinequiz, $groupid);
+    }
+
+    /**
+     * Run one generation step with question shuffling disabled.
+     *
+     * @param callable $callback Callback executed while shuffle is disabled
+     * @return mixed
+     */
+    protected function with_disabled_shuffle(callable $callback) {
+        $originalshuffle = (int) ($this->offlinequiz->shufflequestions ?? 0);
+        $this->offlinequiz->shufflequestions = 0;
+
+        try {
+            return $callback();
+        } finally {
+            $this->offlinequiz->shufflequestions = $originalshuffle;
+        }
+    }
+
+    /**
+     * Build a timestamped output path inside the request temp directory.
+     *
+     * @param string $prefix Base filename prefix
+     * @param string $groupletter Group letter
+     * @param string $extension File extension
+     * @return string
+     */
+    protected function create_timestamped_file_path(
+        string $prefix,
+        string $groupletter,
+        string $extension = 'pdf'
+    ): string {
+        $date = usergetdate(time());
+        $timestamp = sprintf(
+            '%04d%02d%02d_%02d%02d%02d',
+            $date['year'],
+            $date['mon'],
+            $date['mday'],
+            $date['hours'],
+            $date['minutes'],
+            $date['seconds']
+        );
+
+        $filename = clean_filename($prefix . '_' . $groupletter . '_' . $timestamp . '.' . $extension);
+        return rtrim($this->tempdir, '\\/') . DIRECTORY_SEPARATOR . $filename;
     }
 }

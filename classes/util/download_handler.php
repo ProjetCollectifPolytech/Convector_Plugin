@@ -15,32 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Capability definitions for local_convector.
+ * Download helper for generated archives.
  *
  * @package    local_convector
  * @copyright  2026
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_convector\util;
 
-$capabilities = [
-    'local/convector:view' => [
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-    'local/convector:generate' => [
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-];
+/**
+ * Sends generated files through Moodle's temp-file helper.
+ */
+class download_handler {
+    /**
+     * Send a generated file and terminate the request.
+     *
+     * @param string $filepath File path
+     * @param string $downloadname Download file name
+     * @return void
+     */
+    public static function send_file(string $filepath, string $downloadname): void {
+        send_temp_file($filepath, clean_filename($downloadname));
+    }
+}

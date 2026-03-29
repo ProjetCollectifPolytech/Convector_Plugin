@@ -15,32 +15,29 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Capability definitions for local_convector.
+ * Privacy provider for local_convector.
  *
  * @package    local_convector
+ * @category   privacy
  * @copyright  2026
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_convector\privacy;
 
-$capabilities = [
-    'local/convector:view' => [
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-    'local/convector:generate' => [
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-];
+use core_privacy\local\metadata\null_provider;
+
+/**
+ * Convector processes OfflineQuiz data transiently and does not store
+ * personal data in plugin-owned Moodle tables.
+ */
+class provider implements null_provider {
+    /**
+     * Explain why the plugin stores no personal data.
+     *
+     * @return string
+     */
+    public static function get_reason(): string {
+        return 'privacy:metadata';
+    }
+}

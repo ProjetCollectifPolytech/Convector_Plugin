@@ -15,32 +15,31 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Capability definitions for local_convector.
+ * PHPUnit bootstrap for local_convector.
  *
  * @package    local_convector
+ * @category   test
  * @copyright  2026
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$capabilities = [
-    'local/convector:view' => [
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-    'local/convector:generate' => [
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-];
+$dir = __DIR__;
+$moodleroot = null;
+
+for ($i = 0; $i < 6; $i++) {
+    $dir = dirname($dir);
+    if (file_exists($dir . '/config.php') && file_exists($dir . '/lib/setup.php')) {
+        $moodleroot = $dir;
+        break;
+    }
+}
+
+if ($moodleroot === null) {
+    echo "ERROR: Could not locate Moodle root directory.\n";
+    echo "Make sure the plugin is installed at {moodle_root}/local/convector/\n";
+    exit(1);
+}
+
+require_once($moodleroot . '/lib/phpunit/bootstrap.php');

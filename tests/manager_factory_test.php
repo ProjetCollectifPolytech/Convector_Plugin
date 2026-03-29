@@ -14,33 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace local_convector;
+
 /**
- * Capability definitions for local_convector.
+ * Tests for the manager factory.
  *
  * @package    local_convector
- * @copyright  2026
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$capabilities = [
-    'local/convector:view' => [
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-    'local/convector:generate' => [
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-];
+final class manager_factory_test extends \advanced_testcase {
+    public function test_create_default_returns_manager_instance(): void {
+        $this->assertInstanceOf(manager::class, manager_factory::create_default());
+    }
+}

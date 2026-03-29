@@ -14,33 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace local_convector\privacy;
+
 /**
- * Capability definitions for local_convector.
+ * Tests for the Convector privacy provider.
  *
  * @package    local_convector
- * @copyright  2026
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$capabilities = [
-    'local/convector:view' => [
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-    'local/convector:generate' => [
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-];
+final class privacy_provider_test extends \advanced_testcase {
+    public function test_get_reason_returns_metadata_string(): void {
+        $this->assertSame('privacy:metadata', provider::get_reason());
+    }
+}

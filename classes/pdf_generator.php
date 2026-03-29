@@ -149,100 +149,25 @@ class pdf_generator {
      * @param array<string, mixed> $data Group normalization data
      * @return void
      */
-    private function merge_questionnaire_with_answer_sheet($groupid, $questionnairepath, $answersheetpath, $blankpages) {
-        global $DB;
-
-        $logfile = $this->tempdir . DIRECTORY_SEPARATOR . 'generation_log.txt';
-
-        try {
-            $group = $DB->get_record('offlinequiz_groups', ['id' => $groupid], '*', MUST_EXIST);
-            $letterstr = 'abcdefghijklmnopqrstuvwxyz';
-            $groupletter = strtoupper($letterstr[$group->groupnumber - 1]);
-
-            $date = usergetdate(time());
-            $timestamp = sprintf(
-                '%04d%02d%02d_%02d%02d%02d',
-                $date['year'],
-                $date['mon'],
-                $date['mday'],
-                $date['hours'],
-                $date['minutes'],
-                $date['seconds']
-            );
-
-            $mergedfilename = get_string('fileprefixform', 'offlinequiz') . '_' . $groupletter . '_' . $timestamp . '.pdf';
-            $mergedpath = $this->tempdir . DIRECTORY_SEPARATOR . $mergedfilename;
-
-            $pdf = new \setasign\Fpdi\Tcpdf\Fpdi('P', 'mm', 'A4');
-            $pdf->setPrintHeader(false);
-            $pdf->setPrintFooter(false);
-            $pdf->SetMargins(0, 0, 0);
-            $pdf->SetAutoPageBreak(false);
-
-            $sourcefiles = [$questionnairepath, $answersheetpath];
-            $sourcepagecounts = [];
-            $totalpages = (int)$blankpages;
-
-            // First pass: count source pages to compute global page numbering.
-            foreach ($sourcefiles as $sourcefile) {
-                $sourcepagecounts[$sourcefile] = $pdf->setSourceFile($sourcefile);
-                $totalpages += $sourcepagecounts[$sourcefile];
-            }
-
-            $currentpage = 0;
-
-            foreach ($sourcefiles as $sourcefile) {
-                $pagecount = $sourcepagecounts[$sourcefile];
-                $pdf->setSourceFile($sourcefile);
-                for ($pagenumber = 1; $pagenumber <= $pagecount; $pagenumber++) {
-                    $templateid = $pdf->importPage($pagenumber);
-                    $templatesize = $pdf->getTemplateSize($templateid);
-                    $pdf->AddPage($templatesize['orientation'], [$templatesize['width'], $templatesize['height']]);
-                    $pdf->useTemplate($templateid);
-                    $currentpage++;
-                    $this->write_merged_page_number($pdf, $currentpage, $totalpages, $templatesize['width'], $templatesize['height']);
-                }
-            }
-
-            for ($i = 0; $i < $blankpages; $i++) {
-                $pdf->AddPage('P', 'A4');
-                $currentpage++;
-                $this->write_merged_page_number($pdf, $currentpage, $totalpages, 210, 297);
-            }
-
-            $pdfcontent = $pdf->Output('', 'S');
-            if (file_put_contents($mergedpath, $pdfcontent) === false) {
-                return false;
-            }
-
-            return $mergedpath;
-        } catch (\Throwable $e) {
-            file_put_contents(
-                $logfile,
-                '  Merge error for group ' . $groupid . ': ' . $e->getMessage() . "\n",
-                FILE_APPEND
-            );
-            return false;
+    private function append_correction_archive_file(array &$pdffiles, int $groupid, array $data): void {
+        $correctionform = $this->correctiongenerator->generate($groupid, $data);
+        if ($correctionform !== false) {
+            $pdffiles[] = ['path' => $correctionform, 'type' => 'correction'];
         }
     }
 
     /**
-     * Write a unified page number at the bottom of a merged page.
+     * Remove generated intermediate files.
      *
-     * @param \setasign\Fpdi\Tcpdf\Fpdi $pdf PDF instance
-     * @param int $currentpage Current page index (1-based)
-     * @param int $totalpages Total number of pages in merged PDF
-     * @param float $width Page width in mm
-     * @param float $height Page height in mm
+     * @param string[] $paths Files to remove
+     * @return void
      */
-    private function write_merged_page_number($pdf, $currentpage, $totalpages, $width, $height) {
-        // Cover existing footer text from source PDFs, then draw unified numbering.
-        $pdf->SetFillColor(255, 255, 255);
-        $pdf->Rect(0, $height - 12, $width, 12, 'F');
-        $pdf->SetTextColor(0, 0, 0);
-        $pdf->SetFont('helvetica', '', 9);
-        $pdf->SetXY(0, $height - 9);
-        $pdf->Cell($width, 5, $currentpage . ' / ' . $totalpages, 0, 0, 'C');
+    private function cleanup_files(array $paths): void {
+        foreach ($paths as $path) {
+            if (is_string($path) && file_exists($path)) {
+                @unlink($path);
+            }
+        }
     }
 
     /**

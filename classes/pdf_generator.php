@@ -235,7 +235,6 @@ class pdf_generator {
         return $zippath;
     }
 
-    
     /**
      * Merge questionnaire and answer sheet into one PDF, then append blank pages.
      *
@@ -269,7 +268,7 @@ class pdf_generator {
                 $date['seconds']
             );
 
-            $mergedfilename = get_string('fileprefixform', 'offlinequiz') . '_' . $groupletter . '_merged_' . $timestamp . '.pdf';
+            $mergedfilename = get_string('fileprefixform', 'offlinequiz') . '_' . $groupletter . '_' . $timestamp . '.pdf';
             $mergedpath = $this->tempdir . DIRECTORY_SEPARATOR . $mergedfilename;
 
             $pdf = new \setasign\Fpdi\Tcpdf\Fpdi('P', 'mm', 'A4');
@@ -279,18 +278,34 @@ class pdf_generator {
             $pdf->SetAutoPageBreak(false);
 
             $sourcefiles = [$questionnairepath, $answersheetpath];
+            $sourcepagecounts = [];
+            $totalpages = (int)$blankpages;
+
+            // First pass: count source pages to compute global page numbering.
             foreach ($sourcefiles as $sourcefile) {
-                $pagecount = $pdf->setSourceFile($sourcefile);
+                $sourcepagecounts[$sourcefile] = $pdf->setSourceFile($sourcefile);
+                $totalpages += $sourcepagecounts[$sourcefile];
+            }
+
+            $currentpage = 0;
+
+            foreach ($sourcefiles as $sourcefile) {
+                $pagecount = $sourcepagecounts[$sourcefile];
+                $pdf->setSourceFile($sourcefile);
                 for ($pagenumber = 1; $pagenumber <= $pagecount; $pagenumber++) {
                     $templateid = $pdf->importPage($pagenumber);
                     $templatesize = $pdf->getTemplateSize($templateid);
                     $pdf->AddPage($templatesize['orientation'], [$templatesize['width'], $templatesize['height']]);
                     $pdf->useTemplate($templateid);
+                    $currentpage++;
+                    $this->write_merged_page_number($pdf, $currentpage, $totalpages, $templatesize['width'], $templatesize['height']);
                 }
             }
 
             for ($i = 0; $i < $blankpages; $i++) {
                 $pdf->AddPage('P', 'A4');
+                $currentpage++;
+                $this->write_merged_page_number($pdf, $currentpage, $totalpages, 210, 297);
             }
 
             $pdfcontent = $pdf->Output('', 'S');
@@ -310,76 +325,22 @@ class pdf_generator {
     }
 
     /**
-     * Merge questionnaire and answer sheet into one PDF, then append blank pages.
+     * Write a unified page number at the bottom of a merged page.
      *
-     * Blank pages are appended after the answer sheet so the final rendering order is:
-     * questionnaire -> answer sheet -> normalization blanks.
-     *
-     * @param int $groupid The offlinequiz group id
-     * @param string $questionnairepath Path to questionnaire PDF
-     * @param string $answersheetpath Path to answer sheet PDF
-     * @param int $blankpages Number of normalization blank pages to append
-     * @return string|false Path to merged PDF file or false on failure
+     * @param \setasign\Fpdi\Tcpdf\Fpdi $pdf PDF instance
+     * @param int $currentpage Current page index (1-based)
+     * @param int $totalpages Total number of pages in merged PDF
+     * @param float $width Page width in mm
+     * @param float $height Page height in mm
      */
-    private function merge_questionnaire_with_answer_sheet($groupid, $questionnairepath, $answersheetpath, $blankpages) {
-        global $DB;
-
-        $logfile = $this->tempdir . DIRECTORY_SEPARATOR . 'generation_log.txt';
-
-        try {
-            $group = $DB->get_record('offlinequiz_groups', ['id' => $groupid], '*', MUST_EXIST);
-            $letterstr = 'abcdefghijklmnopqrstuvwxyz';
-            $groupletter = strtoupper($letterstr[$group->groupnumber - 1]);
-
-            $date = usergetdate(time());
-            $timestamp = sprintf(
-                '%04d%02d%02d_%02d%02d%02d',
-                $date['year'],
-                $date['mon'],
-                $date['mday'],
-                $date['hours'],
-                $date['minutes'],
-                $date['seconds']
-            );
-
-            $mergedfilename = get_string('fileprefixform', 'offlinequiz') . '_' . $groupletter . '_merged_' . $timestamp . '.pdf';
-            $mergedpath = $this->tempdir . DIRECTORY_SEPARATOR . $mergedfilename;
-
-            $pdf = new \setasign\Fpdi\Tcpdf\Fpdi('P', 'mm', 'A4');
-            $pdf->setPrintHeader(false);
-            $pdf->setPrintFooter(false);
-            $pdf->SetMargins(0, 0, 0);
-            $pdf->SetAutoPageBreak(false);
-
-            $sourcefiles = [$questionnairepath, $answersheetpath];
-            foreach ($sourcefiles as $sourcefile) {
-                $pagecount = $pdf->setSourceFile($sourcefile);
-                for ($pagenumber = 1; $pagenumber <= $pagecount; $pagenumber++) {
-                    $templateid = $pdf->importPage($pagenumber);
-                    $templatesize = $pdf->getTemplateSize($templateid);
-                    $pdf->AddPage($templatesize['orientation'], [$templatesize['width'], $templatesize['height']]);
-                    $pdf->useTemplate($templateid);
-                }
-            }
-
-            for ($i = 0; $i < $blankpages; $i++) {
-                $pdf->AddPage('P', 'A4');
-            }
-
-            $pdfcontent = $pdf->Output('', 'S');
-            if (file_put_contents($mergedpath, $pdfcontent) === false) {
-                return false;
-            }
-
-            return $mergedpath;
-        } catch (\Throwable $e) {
-            file_put_contents(
-                $logfile,
-                '  Merge error for group ' . $groupid . ': ' . $e->getMessage() . "\n",
-                FILE_APPEND
-            );
-            return false;
-        }
+    private function write_merged_page_number($pdf, $currentpage, $totalpages, $width, $height) {
+        // Cover existing footer text from source PDFs, then draw unified numbering.
+        $pdf->SetFillColor(255, 255, 255);
+        $pdf->Rect(0, $height - 12, $width, 12, 'F');
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetFont('helvetica', '', 9);
+        $pdf->SetXY(0, $height - 9);
+        $pdf->Cell($width, 5, $currentpage . ' / ' . $totalpages, 0, 0, 'C');
     }
 
     /**

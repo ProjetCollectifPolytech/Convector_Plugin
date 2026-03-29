@@ -15,37 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Generator for normalized questionnaire PDFs.
+ * Download helper for generated archives.
  *
  * @package    local_offlinequizaddons
  * @copyright  2026
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_offlinequizaddons;
+namespace local_offlinequizaddons\util;
 
 /**
- * Generates the question-sheet part of the normalized archive.
+ * Sends generated files through Moodle's temp-file helper.
  */
-class quiz_generator extends question_pdf_generator_base {
+class download_handler {
     /**
-     * {@inheritDoc}
+     * Send a generated file and terminate the request.
+     *
+     * @param string $filepath File path
+     * @param string $downloadname Download file name
+     * @return void
      */
-    protected function get_cover_heading_string_identifier(): string {
-        return 'questionsheet';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function get_output_prefix_string_identifier(): string {
-        return 'fileprefixform';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function should_render_correction_answers(): bool {
-        return false;
+    public static function send_file(string $filepath, string $downloadname): void {
+        send_temp_file($filepath, clean_filename($downloadname));
     }
 }

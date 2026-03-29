@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * French language strings for local_offlinequizaddons plugin.
+ * French language strings for local_offlinequizaddons.
  *
  * @package    local_offlinequizaddons
  * @copyright  2026
@@ -26,38 +26,24 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Extensions OfflineQuiz';
 $string['offlinequizaddons:view'] = 'Voir les extensions OfflineQuiz';
-$string['tabname'] = 'Extensions';
-$string['helloworld'] = 'Bonjour le monde';
-$string['welcome'] = 'Bienvenue dans les Extensions OfflineQuiz';
-$string['mainpagetitle'] = 'Extensions OfflineQuiz';
+$string['offlinequizaddons:generate'] = 'Generer les archives OfflineQuiz normalisees';
 
-// Temporal Convector strings
 $string['temporal_convector'] = 'Convecteur Temporel';
-$string['temporal_convector_link'] = 'Télécharger les données à partir du convecteur temporel';
-$string['temporal_description'] = 'Le Convecteur Temporel normalise le nombre de pages sur toutes les copies de votre examen. Cela garantit que les copies d\'examen aient le même nombre de pages, évitant ainsi les incohérences de mise en page.';
-$string['analysis_summary'] = 'Résumé de l\'analyse';
+$string['temporal_description'] = 'Le Convecteur Temporel normalise le nombre de pages entre tous les groupes OfflineQuiz afin que chaque copie generee suive la meme pagination.';
 $string['group_analysis'] = 'Analyse par groupe';
-$string['question_details'] = 'Détails des questions';
-$string['max_pages'] = 'Pages maximum';
-$string['needs_normalization'] = 'Nécessite une normalisation';
+$string['question_details'] = 'Details des questions';
 $string['question_count'] = 'Nombre de questions';
 $string['current_pages'] = 'Pages actuelles';
-$string['blank_pages_needed'] = 'Pages blanches nécessaires';
+$string['blank_pages_needed'] = 'Pages blanches necessaires';
 $string['final_pages'] = 'Pages finales';
 $string['pages'] = 'Pages';
 $string['group'] = 'Groupe';
-$string['generate_normalized_pdfs'] = 'Générer les PDF normalisés';
+$string['generate_normalized_pdfs'] = 'Generer les PDF normalises';
+$string['cannot_generate_normalized_pdfs'] = 'Vous pouvez consulter l\'analyse du Convecteur Temporel, mais vous ne disposez pas du droit de generer l\'archive normalisee.';
 $string['final_pages_info'] = 'Nombre de pages : {$a}';
-$string['no_normalization_needed'] = 'Toutes les copies d\'examen ont déjà le même nombre de pages. Aucune normalisation n\'est nécessaire.';
-$string['temporal_info'] = 'Cet examen comporte actuellement {$a->currentpages} pages et sera normalisé à {$a->targetpages} pages.';
-$string['blankpage'] = 'Page blanche pour la normalisation';
+$string['no_normalization_needed'] = 'Toutes les copies d\'examen ont deja le meme nombre de pages. Aucune normalisation n\'est necessaire.';
 
-// Instructions for PDF cover page
-$string['instructions'] = 'Instructions';
-$string['instructions_text'] = "- Remplissez le formulaire complètement\n- Marquez vos réponses clairement\n- Utilisez uniquement un stylo noir ou bleu\n- Ne pliez pas et n'abîmez pas ce formulaire";
-
-// Error messages
-$string['error_no_offlinequiz'] = 'Erreur : Aucun quiz hors ligne trouvé.';
-$string['error_no_questions'] = 'Erreur : Cet examen ne contient aucune question. Au moins une question est requise.';
-$string['error_invalid_question_type'] = 'Erreur : Le type de question "{$a}" n\'est pas compatible. Seuls les QCM et les questions de rédaction sont supportés.';
-$string['error_pdf_generation'] = 'Erreur : Échec de la génération des fichiers PDF. Veuillez réessayer.';
+$string['error_no_offlinequiz'] = 'Erreur : aucune activite OfflineQuiz n\'a ete trouvee.';
+$string['error_no_questions'] = 'Erreur : cet examen ne contient aucune question. Au moins une question est requise.';
+$string['error_invalid_question_type'] = 'Erreur : le type de question "{$a}" n\'est pas compatible. Seuls multichoice, essay, shortanswer et truefalse sont supportes.';
+$string['error_pdf_generation'] = 'Erreur : echec de la generation des fichiers PDF. Veuillez reessayer.';

@@ -1,119 +1,60 @@
-# OfflineQuiz Addons Plugin for Moodle
+# Temporal Convector for OfflineQuiz
 
-A local plugin that extends the OfflineQuiz module functionality without modifying its core code.
+`Convector_Plugin` provides the `local_offlinequizaddons` Moodle plugin and currently focuses on one production feature: **Temporal Convector**.
 
-## Description
+The plugin analyzes OfflineQuiz groups, computes the page gap between them, then generates a normalized ZIP archive containing:
 
-This plugin adds a new tab to all OfflineQuiz activities, providing a foundation for extending OfflineQuiz capabilities with custom features, reports, and tools.
-
-## Features
-
-- ✅ Adds a custom "Addons" tab to OfflineQuiz module pages
-- ✅ Clean architecture with modern Moodle standards (namespaces, renderers, templates)
-- ✅ Capability-based access control
-- ✅ No modifications to core OfflineQuiz code
-- ✅ Easy to maintain and extend
+- merged questionnaires
+- answer sheets
+- correction forms
 
 ## Requirements
 
-- Moodle 4.0 or higher
-- OfflineQuiz module (`mod_offlinequiz`) must be installed
+- Moodle 4.5+
+- `mod_offlinequiz` for Moodle 4.5 (`MOODLE_405_STABLE`)
+- PHP 8.1+
+
+## Architecture
+
+The plugin now follows the same modular style as `Anonymous_Plugin` and `Export_Plugin`:
+
+- thin entrypoints in `temporal.php`, `view.php` and `lib.php`
+- orchestration through `classes/manager.php`
+- dependency wiring in `classes/manager_factory.php`
+- HTTP/page concerns isolated in `classes/controller/`
+- Moodle navigation glue isolated in `classes/integration/`
+- business services isolated in `classes/service/`
+- PDF generation split between generators and dedicated helpers/services
+
+## Quality Tooling
+
+The repository includes:
+
+- `composer.json` for PHPCS dependencies
+- `phpcs.xml.dist` using Moodle coding standards
+- `tools/quality_guard.php` for local architectural guardrails
+- `phpunit.xml` and PHPUnit tests in `tests/`
+- GitHub Actions CI covering quality guard, PHPCS, lint and Moodle PHPUnit
 
 ## Installation
 
-### Method 1: Via Moodle UI (Recommended)
-
-1. Download the plugin as a ZIP file
-2. Log in to your Moodle site as an administrator
-3. Go to `Site administration → Plugins → Install plugins`
-4. Upload the ZIP file
-5. Click "Install plugin from the ZIP file"
-6. Follow the on-screen instructions
-
-### Method 2: Manual Installation
-
-1. Extract the ZIP file
-2. Copy the `offlinequizaddons` folder to `[moodleroot]/local/`
-3. Visit `Site administration → Notifications` to complete the installation
-4. The plugin will be installed automatically
+1. Copy the plugin to `local/offlinequizaddons`
+2. Install or update the site via Moodle notifications
+3. Ensure `mod_offlinequiz` is installed on the same Moodle instance
 
 ## Usage
 
-1. Navigate to any OfflineQuiz activity in your course
-2. You will see a new "Addons" tab in the activity navigation
-3. Click on the tab to access the addon features (currently displays "Hello World")
+1. Open an OfflineQuiz activity
+2. Follow the Temporal Convector entry added by the plugin navigation integration
+3. Review the analysis page
+4. Generate the normalized ZIP archive when required
 
-## Directory Structure
+## Development Notes
 
-```
-local/offlinequizaddons/
-├── classes/
-│   └── output/
-│       ├── mainpage.php       # Renderable class for main page
-│       └── renderer.php        # Plugin renderer
-├── db/
-│   └── access.php              # Capability definitions
-├── lang/
-│   └── en/
-│       └── local_offlinequizaddons.php  # English language strings
-├── templates/
-│   └── mainpage.mustache       # Main page template
-├── lib.php                     # Library functions and callbacks
-├── version.php                 # Plugin version information
-├── view.php                    # Main view page
-├── README.md                   # This file
-└── .gitignore                  # Git ignore rules
-```
-
-## Capabilities
-
-- `local/offlinequizaddons:view` - View the addons tab (granted to teachers and managers by default)
-
-## Development
-
-This plugin is designed with extensibility in mind. Future enhancements can include:
-
-- Custom reports and analytics
-- Additional quiz management tools
-- Enhanced export/import features
-- Custom settings and configurations
-- AJAX-powered interactive features
-
-### Adding New Features
-
-1. Create new classes in `classes/` following PSR-4 autoloading
-2. Add new templates in `templates/` directory
-3. Extend `lib.php` with additional callbacks as needed
-4. Add language strings in `lang/en/local_offlinequizaddons.php`
-
-## Version Control
-
-This plugin uses Git for version control. To track your changes:
-
-```bash
-cd local/offlinequizaddons
-git add .
-git commit -m "Your commit message"
-```
-
-## Support
-
-For issues, questions, or contributions, please contact the plugin maintainer.
+- Temporary generation artifacts are isolated per request under Moodle temp storage
+- ZIP download is delegated to Moodle temp-file APIs
+- Generation requires the dedicated capability `local/offlinequizaddons:generate`
 
 ## License
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-## Credits
-
-Developed following Moodle coding guidelines and best practices.
-
-## Changelog
-
-### Version 1.0.0 (2025-12-11)
-- Initial release
-- Added "Addons" tab to OfflineQuiz activities
-- Basic "Hello World" demonstration page
-- Clean, maintainable architecture
+GNU GPL v3 or later

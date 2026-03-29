@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Redirect to temporal page - main view is no longer used.
+ * Legacy redirect entrypoint for Temporal Convector.
  *
  * @package    local_offlinequizaddons
  * @copyright  2026
@@ -24,8 +24,8 @@
 
 require_once(__DIR__ . '/../../config.php');
 
-// Get the course module ID from the URL parameter
 $cmid = required_param('id', PARAM_INT);
 
-// Redirect to temporal convector
+require_login();
+
 redirect(new moodle_url('/local/offlinequizaddons/temporal.php', ['id' => $cmid]));

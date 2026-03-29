@@ -14,38 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Generator for normalized questionnaire PDFs.
- *
- * @package    local_offlinequizaddons
- * @copyright  2026
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace local_offlinequizaddons;
 
 /**
- * Generates the question-sheet part of the normalized archive.
+ * Tests for the manager factory.
+ *
+ * @package    local_offlinequizaddons
  */
-class quiz_generator extends question_pdf_generator_base {
-    /**
-     * {@inheritDoc}
-     */
-    protected function get_cover_heading_string_identifier(): string {
-        return 'questionsheet';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function get_output_prefix_string_identifier(): string {
-        return 'fileprefixform';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function should_render_correction_answers(): bool {
-        return false;
+final class manager_factory_test extends \advanced_testcase {
+    public function test_create_default_returns_manager_instance(): void {
+        $this->assertInstanceOf(manager::class, manager_factory::create_default());
     }
 }

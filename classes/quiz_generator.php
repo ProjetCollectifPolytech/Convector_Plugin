@@ -15,32 +15,37 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Capability definitions for local_convector.
+ * Generator for normalized questionnaire PDFs.
  *
  * @package    local_convector
  * @copyright  2026
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_convector;
 
-$capabilities = [
-    'local/convector:view' => [
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-    'local/convector:generate' => [
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-];
+/**
+ * Generates the question-sheet part of the normalized archive.
+ */
+class quiz_generator extends question_pdf_generator_base {
+    /**
+     * {@inheritDoc}
+     */
+    protected function get_cover_heading_string_identifier(): string {
+        return 'questionsheet';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function get_output_prefix_string_identifier(): string {
+        return 'fileprefixform';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function should_render_correction_answers(): bool {
+        return false;
+    }
+}

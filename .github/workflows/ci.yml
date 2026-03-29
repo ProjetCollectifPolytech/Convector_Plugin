@@ -1,0 +1,220 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - "codex/**"
+  pull_request:
+
+jobs:
+  quality:
+    name: Quality Guard
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout plugin
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+
+      - name: Run quality guard
+        run: php tools/quality_guard.php
+
+  standards:
+    name: Moodle PHPCS
+    runs-on: ubuntu-latest
+    needs: quality
+
+    steps:
+      - name: Checkout plugin
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-convector-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-convector-composer-
+
+      - name: Install quality dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run PHPCS
+        run: composer run phpcs
+
+  lint:
+    name: PHP Lint (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    needs: [quality, standards]
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["8.1", "8.2"]
+
+    steps:
+      - name: Checkout plugin
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Lint PHP files
+        run: |
+          set -euo pipefail
+          while IFS= read -r file; do
+            php -l "$file"
+          done < <(git ls-files '*.php')
+
+  phpunit:
+    name: Moodle PHPUnit
+    runs-on: ubuntu-latest
+    needs: [quality, standards, lint]
+    env:
+      LANG: en_AU.UTF-8
+      LC_ALL: en_AU.UTF-8
+
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: moodle
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping --host 127.0.0.1 --user root --password=root"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout plugin
+        uses: actions/checkout@v4
+        with:
+          path: plugin
+
+      - name: Checkout Moodle 4.5
+        uses: actions/checkout@v4
+        with:
+          repository: moodle/moodle
+          ref: MOODLE_405_STABLE
+          path: moodle
+
+      - name: Checkout mod_offlinequiz
+        uses: actions/checkout@v4
+        with:
+          repository: academic-moodle-cooperation/moodle-mod_offlinequiz
+          ref: MOODLE_405_STABLE
+          path: offlinequiz
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+          extensions: curl, dom, exif, gd, iconv, intl, mbstring, mysqli, openssl, simplexml, soap, sodium, xml, xmlreader, zip, zlib
+          ini-values: max_input_vars=5000
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: moodle/vendor
+          key: ${{ runner.os }}-moodle-405-composer-${{ hashFiles('moodle/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-moodle-405-composer-
+
+      - name: Install plugin into Moodle
+        run: |
+          set -euo pipefail
+          mkdir -p moodle/local/convector
+          cp -R plugin/. moodle/local/convector/
+          rm -rf moodle/local/convector/.git
+
+      - name: Install mod_offlinequiz into Moodle
+        run: |
+          set -euo pipefail
+          mkdir -p moodle/mod/offlinequiz
+          cp -R offlinequiz/. moodle/mod/offlinequiz/
+          rm -rf moodle/mod/offlinequiz/.git
+
+      - name: Install Composer dependencies
+        working-directory: moodle
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Install required locale
+        run: |
+          sudo locale-gen en_AU.UTF-8
+          sudo update-locale LANG=en_AU.UTF-8 LC_ALL=en_AU.UTF-8
+
+      - name: Prepare Moodle config
+        working-directory: moodle
+        run: |
+          set -euo pipefail
+          mkdir -p moodledata phpunitdata
+          cat > config.php <<'PHP'
+          <?php
+          unset($CFG);
+          global $CFG;
+          $CFG = new stdClass();
+          $CFG->dbtype = 'mariadb';
+          $CFG->dblibrary = 'native';
+          $CFG->dbhost = '127.0.0.1';
+          $CFG->dbname = 'moodle';
+          $CFG->dbuser = 'root';
+          $CFG->dbpass = 'root';
+          $CFG->prefix = 'mdl_';
+          $CFG->dboptions = [
+              'dbpersist' => 0,
+              'dbport' => 3306,
+              'dbsocket' => '',
+              'dbcollation' => 'utf8mb4_unicode_ci',
+          ];
+          $CFG->wwwroot = 'http://127.0.0.1';
+          $CFG->dataroot = __DIR__ . '/moodledata';
+          $CFG->admin = 'admin';
+          $CFG->directorypermissions = 02777;
+          $CFG->phpunit_prefix = 'phpu_';
+          $CFG->phpunit_dataroot = __DIR__ . '/phpunitdata';
+          require_once(__DIR__ . '/lib/setup.php');
+          PHP
+
+      - name: Install Moodle database
+        working-directory: moodle
+        run: |
+          php admin/cli/install_database.php \
+            --lang=en \
+            --fullname="Moodle Test" \
+            --shortname="moodle" \
+            --adminuser=admin \
+            --adminpass="Admin!23456" \
+            --adminemail="admin@example.com" \
+            --agree-license
+
+      - name: Initialise PHPUnit
+        working-directory: moodle
+        run: php admin/tool/phpunit/cli/init.php
+
+      - name: Run local_convector test suite
+        working-directory: moodle
+        run: |
+          set -euo pipefail
+          find local/convector/tests -name '*_test.php' | sort | while read -r file; do
+            echo "Running $file"
+            vendor/bin/phpunit "$file"
+          done

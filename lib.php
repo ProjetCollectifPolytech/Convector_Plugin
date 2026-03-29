@@ -15,102 +15,101 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Library functions for local_offlinequizaddons plugin.
+ * Library functions for local_convector.
  *
- * @package    local_offlinequizaddons
- * @copyright  2025
+ * @package    local_convector
+ * @copyright  2026
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+use local_convector\integration\activity_navigation_integration;
 
 /**
- * Extend the navigation for OfflineQuiz activities.
+ * Return the shared activity navigation integration instance.
  *
- * This function adds a new tab to the OfflineQuiz module navigation.
- * It is called automatically by Moodle when viewing an OfflineQuiz activity.
- *
- * @param navigation_node $navigation The navigation node to extend
- * @return void
+ * @return activity_navigation_integration
  */
-function local_offlinequizaddons_extend_navigation($navigation) {
-    global $PAGE;
+function local_convector_get_activity_navigation_integration(): activity_navigation_integration {
+    static $integration = null;
 
-    // Only extend navigation for OfflineQuiz module contexts
-    $context = $PAGE->context;
-    if ($context->contextlevel != CONTEXT_MODULE) {
-        return;
+    if ($integration === null) {
+        $integration = new activity_navigation_integration();
     }
 
-    // Get the course module
-    $cm = get_coursemodule_from_id('offlinequiz', $context->instanceid, 0, false, IGNORE_MISSING);
-    if (!$cm || $cm->modname !== 'offlinequiz') {
-        return;
-    }
-
-    // Check if user has capability to view the addons
-    if (!has_capability('local/offlinequizaddons:view', $context)) {
-        return;
-    }
-
-    // Add the new tab to the navigation
-    $url = new moodle_url('/local/offlinequizaddons/view.php', ['id' => $cm->id]);
-    $node = navigation_node::create(
-        get_string('tabname', 'local_offlinequizaddons'),
-        $url,
-        navigation_node::TYPE_SETTING,
-        null,
-        'offlinequizaddons',
-        new pix_icon('i/settings', '')
-    );
-
-    if ($PAGE->url->compare($url, URL_MATCH_BASE)) {
-        $node->make_active();
-    }
-
-    $navigation->add_node($node);
+    return $integration;
 }
 
 /**
- * Extend the navigation in the settings block for OfflineQuiz.
+ * Resolve activity access metadata for supported OfflineQuiz pages.
  *
- * This is an alternative method that adds the tab to the settings block.
- *
- * @param settings_navigation $settingsnav The settings navigation object
- * @param context $context The context object
- * @return void
+ * @param \stdClass|\cm_info $cm Course module
+ * @param context_course $coursecontext Course context
+ * @return array|null
  */
-function local_offlinequizaddons_extend_settings_navigation($settingsnav, $context) {
+function local_convector_get_activity_access_data($cm, context_course $coursecontext): ?array {
+    return local_convector_get_activity_navigation_integration()->get_activity_access_data($cm, $coursecontext);
+}
+
+/**
+ * Determine whether the current page should display a prominent activity button.
+ *
+ * @return bool
+ */
+function local_convector_should_add_activity_button(): bool {
     global $PAGE;
 
-    // Only extend for OfflineQuiz module contexts
-    if ($context->contextlevel != CONTEXT_MODULE) {
+    return local_convector_get_activity_navigation_integration()->should_add_activity_button($PAGE);
+}
+
+/**
+ * Add a visible page button for supported activity pages.
+ *
+ * @param array $accessdata Access metadata
+ * @return void
+ */
+function local_convector_add_activity_button(array $accessdata): void {
+    global $PAGE;
+
+    local_convector_get_activity_navigation_integration()->add_activity_button($PAGE, $accessdata);
+}
+
+/**
+ * Extend activity settings navigation with the Convector link.
+ *
+ * @param settings_navigation $settingsnav Settings navigation
+ * @param context $context Current context
+ * @return void
+ */
+function local_convector_extend_settings_navigation($settingsnav, $context): void {
+    global $PAGE;
+
+    local_convector_get_activity_navigation_integration()->extend_settings_navigation($settingsnav, $PAGE);
+}
+
+/**
+ * Extend secondary navigation on supported activity pages.
+ *
+ * @param navigation_node $navigation Navigation node
+ * @param \stdClass $course Course record
+ * @param \cm_info $cm Course module info
+ * @return void
+ */
+function local_convector_extend_navigation_module($navigation, $course, $cm): void {
+    local_convector_get_activity_navigation_integration()->extend_navigation_module($navigation, $course, $cm);
+}
+
+/**
+ * Backward-compatible wrapper for older custom integrations.
+ *
+ * @param navigation_node $navigation Navigation node
+ * @return void
+ */
+function local_convector_extend_navigation($navigation): void {
+    global $PAGE;
+
+    if (empty($PAGE->cm) || empty($PAGE->course)) {
         return;
     }
 
-    // Verify this is an OfflineQuiz module
-    $cm = get_coursemodule_from_id('offlinequiz', $context->instanceid, 0, false, IGNORE_MISSING);
-    if (!$cm || $cm->modname !== 'offlinequiz') {
-        return;
-    }
-
-    // Check capability
-    if (!has_capability('local/offlinequizaddons:view', $context)) {
-        return;
-    }
-
-    // Find the module settings node
-    $modulenode = $settingsnav->find('modulesettings', navigation_node::TYPE_SETTING);
-    if ($modulenode) {
-        $url = new moodle_url('/local/offlinequizaddons/view.php', ['id' => $cm->id]);
-        $node = navigation_node::create(
-            get_string('tabname', 'local_offlinequizaddons'),
-            $url,
-            navigation_node::TYPE_SETTING,
-            null,
-            'offlinequizaddons',
-            new pix_icon('i/settings', '')
-        );
-        $modulenode->add_node($node);
-    }
+    local_convector_extend_navigation_module($navigation, $PAGE->course, $PAGE->cm);
 }

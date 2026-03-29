@@ -232,8 +232,15 @@ if (!$processor->validate()) {
             'class' => 'btn',
             'style' => 'background-color: #0f6cbf; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer;'
         ]);
+        $stringmanager = get_string_manager();
+        if ($stringmanager->string_exists('final_pages_info', 'local_offlinequizaddons')) {
+            $finalpagesinfo = get_string('final_pages_info', 'local_offlinequizaddons', $finalpagecount);
+        } else {
+            $finalpagesinfo = get_string('final_pages', 'local_offlinequizaddons') . ': ' . $finalpagecount;
+        }
+
         echo html_writer::div(
-            get_string('final_pages_info', 'local_offlinequizaddons', $finalpagecount),
+            $finalpagesinfo,
             '',
             ['style' => 'margin-top: 8px; color: #555; font-size: 14px;']
         );

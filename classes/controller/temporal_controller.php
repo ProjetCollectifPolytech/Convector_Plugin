@@ -27,6 +27,7 @@ namespace local_convector\controller;
 use core\notification;
 use local_convector\convector_event_dispatcher;
 use local_convector\manager;
+use local_convector\service\uploaded_pdf_resolver;
 use local_convector\util\download_handler;
 
 /**
@@ -41,6 +42,8 @@ class temporal_controller {
     private temporal_page_presenter $presenter;
     /** @var convector_event_dispatcher */
     private convector_event_dispatcher $eventdispatcher;
+    /** @var uploaded_pdf_resolver */
+    private uploaded_pdf_resolver $uploadedpdfresolver;
 
     /**
      * Constructor.
@@ -49,17 +52,20 @@ class temporal_controller {
      * @param temporal_context_loader|null $contextloader
      * @param temporal_page_presenter|null $presenter
      * @param convector_event_dispatcher|null $eventdispatcher
+     * @param uploaded_pdf_resolver|null $uploadedpdfresolver
      */
     public function __construct(
         manager $manager,
         ?temporal_context_loader $contextloader = null,
         ?temporal_page_presenter $presenter = null,
-        ?convector_event_dispatcher $eventdispatcher = null
+        ?convector_event_dispatcher $eventdispatcher = null,
+        ?uploaded_pdf_resolver $uploadedpdfresolver = null
     ) {
         $this->manager = $manager;
         $this->contextloader = $contextloader ?? new temporal_context_loader();
         $this->presenter = $presenter ?? new temporal_page_presenter();
         $this->eventdispatcher = $eventdispatcher ?? new convector_event_dispatcher();
+        $this->uploadedpdfresolver = $uploadedpdfresolver ?? new uploaded_pdf_resolver();
     }
 
     /**
@@ -98,7 +104,10 @@ class temporal_controller {
         require_sesskey();
         require_capability('local/convector:generate', $requestcontext->context);
 
-        $result = $this->manager->generate_normalized_archive($requestcontext->offlinequiz);
+        $options = $this->uploadedpdfresolver->resolve_options();
+        $result = $this->manager->generate_normalized_archive($requestcontext->offlinequiz, $options);
+        $this->uploadedpdfresolver->cleanup();
+
         if (!$result['success']) {
             foreach ($result['errors'] as $error) {
                 notification::error($error);

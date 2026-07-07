@@ -24,6 +24,7 @@
 
 namespace local_convector;
 
+use local_convector\generation_options;
 use local_convector\service\pdf_generation_service;
 use local_convector\service\temporal_analysis_service;
 use stdClass;
@@ -79,9 +80,10 @@ class manager {
      * Generate the normalized ZIP archive for one OfflineQuiz.
      *
      * @param stdClass $offlinequiz OfflineQuiz activity
+     * @param generation_options|null $options Per-generation options
      * @return array<string, mixed>
      */
-    public function generate_normalized_archive(stdClass $offlinequiz): array {
+    public function generate_normalized_archive(stdClass $offlinequiz, ?generation_options $options = null): array {
         $pagedata = $this->build_page_data($offlinequiz);
         if (!$pagedata['valid']) {
             return [
@@ -92,7 +94,8 @@ class manager {
 
         $result = $this->pdfgenerationservice->generate_normalized_archive(
             $offlinequiz,
-            $pagedata['analysis']['blankpages']
+            $pagedata['analysis']['blankpages'],
+            $options
         );
         if ($result === null) {
             return [

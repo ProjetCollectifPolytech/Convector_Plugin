@@ -75,6 +75,29 @@ final class manager_test extends \advanced_testcase {
         $this->assertFalse($result['success']);
         $this->assertSame([get_string('error_pdf_generation', 'local_convector')], $result['errors']);
     }
+
+    public function test_generate_normalized_archive_forwards_generation_options(): void {
+        $analysis = [
+            'blankpages' => [
+                1 => ['blankpages' => 0, 'targetpages' => 4],
+            ],
+        ];
+        $service = new manager_fake_pdf_generation_service([
+            'filepath' => '/tmp/generated.zip',
+            'downloadname' => 'generated.zip',
+        ]);
+        $manager = new manager(
+            new manager_fake_analysis_service([], $analysis),
+            $service
+        );
+
+        $options = new generation_options(false, '/tmp/first.pdf', '/tmp/last.pdf');
+        $manager->generate_normalized_archive((object) ['id' => 1], $options);
+
+        $this->assertFalse($options->includeanswersheet);
+        $this->assertSame('/tmp/first.pdf', $options->customfirstpagepath);
+        $this->assertSame('/tmp/last.pdf', $options->customlastpagepath);
+    }
 }
 
 /**
@@ -112,6 +135,9 @@ final class manager_fake_pdf_generation_service extends pdf_generation_service {
     /** @var array<string, string>|null */
     private ?array $result;
 
+    /** @var array<string, mixed>|null */
+    private ?array $lastoptions = null;
+
     /**
      * @param array<string, string>|null $result
      */
@@ -119,7 +145,21 @@ final class manager_fake_pdf_generation_service extends pdf_generation_service {
         $this->result = $result;
     }
 
-    public function generate_normalized_archive(\stdClass $offlinequiz, array $blankpages): ?array {
+    public function generate_normalized_archive(
+        \stdClass $offlinequiz,
+        array $blankpages,
+        ?\local_convector\generation_options $options = null
+    ): ?array {
+        $this->lastoptions = $options;
         return $this->result;
+    }
+
+    /**
+     * Return the options forwarded to the last generation call.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function get_last_options(): ?array {
+        return $this->lastoptions;
     }
 }

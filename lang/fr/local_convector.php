@@ -43,6 +43,12 @@ $string['cannot_generate_normalized_pdfs'] = 'Vous pouvez consulter l\'analyse C
 $string['final_pages_info'] = 'Nombre de pages : {$a}';
 $string['no_normalization_needed'] = 'Toutes les copies d\'examen ont deja le meme nombre de pages. Aucune normalisation n\'est necessaire.';
 
+$string['include_answer_sheet'] = 'Inclure les feuilles de reponse';
+$string['custom_first_page'] = 'Premiere page personnalisee (PDF)';
+$string['custom_first_page_help'] = 'PDF optionnel insere au tout debut de chaque questionnaire, avant la page de garde native. Laisser vide pour conserver la page de garde par defaut.';
+$string['custom_last_page'] = 'Derniere page personnalisee (PDF)';
+$string['custom_last_page_help'] = 'PDF optionnel insere avant les pages blanches de normalisation, a la fin de chaque questionnaire et correction. Laisser vide pour l\'omettre.';
+
 $string['error_no_offlinequiz'] = 'Erreur : aucune activite OfflineQuiz n\'a ete trouvee.';
 $string['error_no_questions'] = 'Erreur : cet examen ne contient aucune question. Au moins une question est requise.';
 $string['error_invalid_question_type'] = 'Erreur : le type de question "{$a}" n\'est pas compatible. Seuls multichoice, essay, shortanswer et truefalse sont supportes.';

@@ -201,18 +201,59 @@ class temporal_page_presenter {
         $output = html_writer::start_tag('form', [
             'method' => 'post',
             'action' => $generateurl->out(false),
-            'class' => 'd-inline-block',
+            'enctype' => 'multipart/form-data',
+            'class' => 'convector-generate-form',
         ]);
         $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $requestcontext->cm->id]);
         $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'generate']);
         $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'download', 'value' => 1]);
         $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+
+        $output .= $this->render_form_field(
+            'checkbox',
+            get_string('include_answer_sheet', 'local_convector'),
+            ['name' => 'includeanswersheet', 'value' => 1, 'checked' => 'checked']
+        );
+        $output .= $this->render_form_field(
+            'file',
+            get_string('custom_first_page', 'local_convector'),
+            ['name' => 'customfirstpage', 'accept' => '.pdf,application/pdf'],
+            get_string('custom_first_page_help', 'local_convector')
+        );
+        $output .= $this->render_form_field(
+            'file',
+            get_string('custom_last_page', 'local_convector'),
+            ['name' => 'customlastpage', 'accept' => '.pdf,application/pdf'],
+            get_string('custom_last_page_help', 'local_convector')
+        );
+
         $output .= html_writer::empty_tag('input', [
             'type' => 'submit',
             'value' => get_string('generate_normalized_pdfs', 'local_convector'),
-            'class' => 'btn btn-primary',
+            'class' => 'btn btn-primary mt-2',
         ]);
         $output .= html_writer::end_tag('form');
+
+        return $output;
+    }
+
+    /**
+     * Render one labelled form field.
+     *
+     * @param string $type Input type
+     * @param string $label Field label
+     * @param array<string, mixed> $attributes Input attributes
+     * @param string|null $help Optional help text
+     * @return string
+     */
+    private function render_form_field(string $type, string $label, array $attributes, ?string $help = null): string {
+        $output = html_writer::start_div('form-group mb-2');
+        $output .= html_writer::tag('label', $label, ['class' => 'd-block font-weight-bold']);
+        $output .= html_writer::empty_tag('input', array_merge(['type' => $type, 'class' => 'form-control-file'], $attributes));
+        if ($help !== null) {
+            $output .= html_writer::div($help, 'form-text text-muted small');
+        }
+        $output .= html_writer::end_div();
 
         return $output;
     }

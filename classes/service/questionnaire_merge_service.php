@@ -24,6 +24,7 @@
 
 namespace local_convector\service;
 
+use local_convector\generation_options;
 use local_convector\merged_questionnaire_pdf;
 use stdClass;
 
@@ -32,21 +33,30 @@ use stdClass;
  */
 class questionnaire_merge_service {
     /**
-     * Merge questionnaire and answer sheet, then append blank pages.
+     * Merge questionnaire, optional answer sheet and custom pages, then append blank pages.
+     *
+     * Merge order:
+     *  1. custom first page (when provided)
+     *  2. questionnaire
+     *  3. answer sheet (when provided)
+     *  4. custom last page (when provided)
+     *  5. blank normalization pages (always last)
      *
      * @param int $groupid OfflineQuiz group id
      * @param string $questionnairepath Path to questionnaire PDF
-     * @param string $answersheetpath Path to answer-sheet PDF
+     * @param string|null $answersheetpath Path to answer-sheet PDF, null when excluded
      * @param int $blankpages Number of normalization blank pages
      * @param string $tempdir Request temp directory
+     * @param generation_options|null $options Per-generation options
      * @return string|false
      */
     public function merge(
         int $groupid,
         string $questionnairepath,
-        string $answersheetpath,
+        ?string $answersheetpath,
         int $blankpages,
-        string $tempdir
+        string $tempdir,
+        ?generation_options $options = null
     ) {
         global $DB;
 
@@ -59,8 +69,19 @@ class questionnaire_merge_service {
             $pdf->SetMargins(0, 0, 0);
             $pdf->SetAutoPageBreak(false);
 
+            if ($options !== null && $options->customfirstpagepath !== null) {
+                $this->append_source_pdf($pdf, $options->customfirstpagepath, 'custom');
+            }
+
             $this->append_source_pdf($pdf, $questionnairepath, 'questionnaire');
-            $this->append_source_pdf($pdf, $answersheetpath, 'answer_sheet');
+
+            if ($answersheetpath !== null) {
+                $this->append_source_pdf($pdf, $answersheetpath, 'answer_sheet');
+            }
+
+            if ($options !== null && $options->customlastpagepath !== null) {
+                $this->append_source_pdf($pdf, $options->customlastpagepath, 'custom');
+            }
 
             for ($i = 0; $i < $blankpages; $i++) {
                 $pdf->AddPage('P', 'A4');
@@ -108,7 +129,7 @@ class questionnaire_merge_service {
         $alphabet = 'abcdefghijklmnopqrstuvwxyz';
         $index = max(0, (int) ($group->groupnumber ?? 1) - 1);
         $groupletter = isset($alphabet[$index]) ? strtoupper($alphabet[$index]) : (string) $group->id;
-        $timestamp = date('Ymd_His');
+        $timestamp = date('Ymd_His') . '_' . substr(uniqid('', true), -8);
 
         return clean_filename(
             get_string('fileprefixform', 'offlinequiz') . '_' . $groupletter . '_' . $timestamp . '.pdf'

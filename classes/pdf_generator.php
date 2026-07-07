@@ -24,6 +24,7 @@
 
 namespace local_convector;
 
+use local_convector\service\correction_post_processor;
 use local_convector\service\pdf_archive_builder;
 use local_convector\service\questionnaire_merge_service;
 use stdClass;
@@ -56,6 +57,9 @@ class pdf_generator {
     /** @var pdf_archive_builder */
     private pdf_archive_builder $pdfarchivebuilder;
 
+    /** @var correction_post_processor */
+    private correction_post_processor $correctionpostprocessor;
+
     /**
      * Constructor.
      *
@@ -63,12 +67,14 @@ class pdf_generator {
      * @param temporal_processor $processor Temporal processor
      * @param questionnaire_merge_service|null $questionnairemergeservice Merge service
      * @param pdf_archive_builder|null $pdfarchivebuilder ZIP builder
+     * @param correction_post_processor|null $correctionpostprocessor Correction post-processor
      */
     public function __construct(
         stdClass $offlinequiz,
         temporal_processor $processor,
         ?questionnaire_merge_service $questionnairemergeservice = null,
-        ?pdf_archive_builder $pdfarchivebuilder = null
+        ?pdf_archive_builder $pdfarchivebuilder = null,
+        ?correction_post_processor $correctionpostprocessor = null
     ) {
         $this->offlinequiz = $offlinequiz;
         $this->processor = $processor;
@@ -78,21 +84,23 @@ class pdf_generator {
         $this->correctiongenerator = new correction_generator($offlinequiz, $this->tempdir);
         $this->questionnairemergeservice = $questionnairemergeservice ?? new questionnaire_merge_service();
         $this->pdfarchivebuilder = $pdfarchivebuilder ?? new pdf_archive_builder();
+        $this->correctionpostprocessor = $correctionpostprocessor ?? new correction_post_processor();
     }
 
     /**
      * Generate normalized PDFs for all groups.
      *
      * @param array<int, array<string, mixed>>|null $blankpages Optional blank-page plan
+     * @param generation_options|null $options Per-generation options
      * @return string|false
      */
-    public function generate_normalized_pdfs(?array $blankpages = null) {
+    public function generate_normalized_pdfs(?array $blankpages = null, ?generation_options $options = null) {
         $blankpages = $blankpages ?? $this->processor->calculate_blank_pages();
         $pdffiles = [];
 
         foreach ($blankpages as $groupid => $data) {
-            $this->append_questionnaire_archive_files($pdffiles, (int) $groupid, $data);
-            $this->append_correction_archive_file($pdffiles, (int) $groupid, $data);
+            $this->append_questionnaire_archive_files($pdffiles, (int) $groupid, $data, $options);
+            $this->append_correction_archive_file($pdffiles, (int) $groupid, $data, $options);
         }
 
         if (empty($pdffiles)) {
@@ -116,23 +124,32 @@ class pdf_generator {
      * @param array<int, array<string, string>> $pdffiles Archive file list
      * @param int $groupid OfflineQuiz group id
      * @param array<string, mixed> $data Group normalization data
+     * @param generation_options|null $options Per-generation options
      * @return void
      */
-    private function append_questionnaire_archive_files(array &$pdffiles, int $groupid, array $data): void {
+    private function append_questionnaire_archive_files(
+        array &$pdffiles,
+        int $groupid,
+        array $data,
+        ?generation_options $options
+    ): void {
         $questionnaire = $this->quizgenerator->generate($groupid, $data);
-        $answersheet = $this->answersheetgenerator->generate($groupid, $data);
+        $answersheet = $options !== null && !$options->includeanswersheet
+            ? false
+            : $this->answersheetgenerator->generate($groupid, $data);
 
-        if ($questionnaire === false || $answersheet === false) {
-            $this->cleanup_files(array_filter([$questionnaire, $answersheet], 'is_string'));
+        if ($questionnaire === false) {
+            $this->cleanup_files(array_filter([$answersheet], 'is_string'));
             return;
         }
 
         $merged = $this->questionnairemergeservice->merge(
             $groupid,
             $questionnaire,
-            $answersheet,
+            is_string($answersheet) ? $answersheet : null,
             (int) ($data['blankpages'] ?? 0),
-            $this->tempdir
+            $this->tempdir,
+            $options
         );
         if ($merged !== false) {
             $pdffiles[] = ['path' => $merged, 'type' => 'questionnaire'];
@@ -142,18 +159,27 @@ class pdf_generator {
     }
 
     /**
-     * Append the correction PDF for one group when generation succeeds.
+     * Append the correction PDF for one group, with custom pages when configured.
      *
      * @param array<int, array<string, string>> $pdffiles Archive file list
      * @param int $groupid OfflineQuiz group id
      * @param array<string, mixed> $data Group normalization data
+     * @param generation_options|null $options Per-generation options
      * @return void
      */
-    private function append_correction_archive_file(array &$pdffiles, int $groupid, array $data): void {
+    private function append_correction_archive_file(
+        array &$pdffiles,
+        int $groupid,
+        array $data,
+        ?generation_options $options
+    ): void {
         $correctionform = $this->correctiongenerator->generate($groupid, $data);
-        if ($correctionform !== false) {
-            $pdffiles[] = ['path' => $correctionform, 'type' => 'correction'];
+        if ($correctionform === false) {
+            return;
         }
+
+        $processed = $this->correctionpostprocessor->process($correctionform, $options, $this->tempdir);
+        $pdffiles[] = ['path' => $processed, 'type' => 'correction'];
     }
 
     /**

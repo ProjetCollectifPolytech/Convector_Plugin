@@ -105,7 +105,7 @@ abstract class base_generator {
             $date['hours'],
             $date['minutes'],
             $date['seconds']
-        );
+        ) . '_' . substr(uniqid('', true), -8);
 
         $filename = clean_filename($prefix . '_' . $groupletter . '_' . $timestamp . '.' . $extension);
         return rtrim($this->tempdir, '\\/') . DIRECTORY_SEPARATOR . $filename;

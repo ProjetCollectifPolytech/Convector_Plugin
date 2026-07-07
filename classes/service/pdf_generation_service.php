@@ -24,6 +24,7 @@
 
 namespace local_convector\service;
 
+use local_convector\generation_options;
 use local_convector\pdf_generator;
 use local_convector\temporal_processor;
 use stdClass;
@@ -37,12 +38,17 @@ class pdf_generation_service {
      *
      * @param stdClass $offlinequiz OfflineQuiz activity
      * @param array<int, array<string, mixed>> $blankpages Blank page plan
+     * @param generation_options|null $options Per-generation options
      * @return array<string, string>|null
      */
-    public function generate_normalized_archive(stdClass $offlinequiz, array $blankpages): ?array {
+    public function generate_normalized_archive(
+        stdClass $offlinequiz,
+        array $blankpages,
+        ?generation_options $options = null
+    ): ?array {
         $processor = new temporal_processor($offlinequiz, new offlinequiz_question_repository());
         $generator = new pdf_generator($offlinequiz, $processor);
-        $filepath = $generator->generate_normalized_pdfs($blankpages);
+        $filepath = $generator->generate_normalized_pdfs($blankpages, $options);
 
         if ($filepath === false || !is_string($filepath) || !file_exists($filepath)) {
             return null;

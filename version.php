@@ -25,10 +25,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_convector';
-$plugin->version = 2026032901;
+$plugin->version = 2026032903;
 $plugin->requires = 2024100700;
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '1.2.0';
+$plugin->release = '1.3.0';
 $plugin->dependencies = [
     'mod_offlinequiz' => ANY_VERSION,
 ];

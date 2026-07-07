@@ -62,9 +62,14 @@ class merged_questionnaire_pdf extends \setasign\Fpdi\Tcpdf\Fpdi {
      * @return void
      */
     public function Footer() {
+        $pagetype = $this->get_current_page_type();
+
+        if ($pagetype === 'custom') {
+            return;
+        }
+
         $pagewidth = $this->getPageWidth();
         $pageheight = $this->getPageHeight();
-        $pagetype = $this->get_current_page_type();
 
         $this->SetFillColor(255, 255, 255);
 

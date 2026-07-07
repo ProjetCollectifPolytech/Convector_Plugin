@@ -28,14 +28,17 @@ $excludedsegments = [
 $maxlines = [
     'lib.php' => 130,
     'classes/base_generator.php' => 130,
-    'classes/controller/temporal_controller.php' => 120,
-    'classes/controller/temporal_page_presenter.php' => 260,
+    'classes/controller/temporal_controller.php' => 140,
+    'classes/controller/temporal_page_presenter.php' => 310,
+    'classes/generation_options.php' => 90,
     'classes/integration/activity_navigation_integration.php' => 190,
-    'classes/pdf_generator.php' => 190,
+    'classes/pdf_generator.php' => 210,
     'classes/question_pdf_generator_base.php' => 190,
+    'classes/service/correction_post_processor.php' => 120,
     'classes/service/question_pdf_document_builder.php' => 240,
     'classes/service/question_pdf_question_renderer.php' => 220,
     'classes/service/questionnaire_merge_service.php' => 140,
+    'classes/service/uploaded_pdf_resolver.php' => 120,
 ];
 
 $patterns = [

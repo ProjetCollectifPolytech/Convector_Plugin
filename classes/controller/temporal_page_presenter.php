@@ -167,8 +167,6 @@ class temporal_page_presenter {
                 get_string('no_normalization_needed', 'local_convector'),
                 'alert alert-success'
             );
-            $output .= html_writer::end_div();
-            return $output;
         }
 
         $output .= html_writer::div(

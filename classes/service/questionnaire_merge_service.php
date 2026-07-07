@@ -73,7 +73,7 @@ class questionnaire_merge_service {
             $skipanswersheet = $options !== null && $options->should_skip_answer_sheet();
 
             if ($replacecover) {
-                $this->append_source_pdf($pdf, $options->customfirstpagepath, 'custom');
+                $this->append_source_pdf($pdf, $options->customfirstpagepath, 'custom', false, true);
             }
 
             $this->append_source_pdf($pdf, $questionnairepath, 'questionnaire', $replacecover);
@@ -83,7 +83,7 @@ class questionnaire_merge_service {
             }
 
             if ($options !== null && $options->customlastpagepath !== null) {
-                $this->append_source_pdf($pdf, $options->customlastpagepath, 'custom');
+                $this->append_source_pdf($pdf, $options->customlastpagepath, 'custom', false, true);
             }
 
             for ($i = 0; $i < $blankpages; $i++) {
@@ -110,19 +110,25 @@ class questionnaire_merge_service {
      * @param string $sourcepath Source PDF path
      * @param string $type Source type
      * @param bool $skipfirstpage Whether to skip the first page (cover replacement)
+     * @param bool $fittotarget Whether to scale each page to fit the A4 target
      * @return void
      */
     private function append_source_pdf(
         merged_questionnaire_pdf $pdf,
         string $sourcepath,
         string $type,
-        bool $skipfirstpage = false
+        bool $skipfirstpage = false,
+        bool $fittotarget = false
     ): void {
         $pagecount = $pdf->setSourceFile($sourcepath);
-        $startpage = $skipfirstpage ? 2 : 1;
-        for ($pagenumber = $startpage; $pagenumber <= $pagecount; $pagenumber++) {
+        for ($pagenumber = $skipfirstpage ? 2 : 1; $pagenumber <= $pagecount; $pagenumber++) {
             $templateid = $pdf->importPage($pagenumber);
             $templatesize = $pdf->getTemplateSize($templateid);
+            if ($fittotarget) {
+                custom_page_fitter::add_fitted_page($pdf, $templateid, $templatesize);
+                $pdf->register_page_type($type);
+                continue;
+            }
             $pdf->AddPage($templatesize['orientation'], [$templatesize['width'], $templatesize['height']]);
             $pdf->register_page_type($type);
             $pdf->useTemplate($templateid);

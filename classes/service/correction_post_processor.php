@@ -57,13 +57,13 @@ class correction_post_processor {
             $replacecover = $options->should_replace_cover_page();
 
             if ($replacecover) {
-                $this->append_source_pages($pdf, $options->customfirstpagepath);
+                $this->append_source_pages($pdf, $options->customfirstpagepath, false, true);
             }
 
             $this->append_source_pages($pdf, $correctionpath, $replacecover);
 
             if ($options->customlastpagepath !== null) {
-                $this->append_source_pages($pdf, $options->customlastpagepath);
+                $this->append_source_pages($pdf, $options->customlastpagepath, false, true);
             }
 
             $destination = rtrim($tempdir, '\\/') . DIRECTORY_SEPARATOR . 'correction_custom_' . uniqid('', true) . '.pdf';
@@ -90,14 +90,23 @@ class correction_post_processor {
      * @param \setasign\Fpdi\Tcpdf\Fpdi $pdf Destination PDF
      * @param string $sourcepath Source PDF path
      * @param bool $skipfirstpage Whether to skip the first page (cover replacement)
+     * @param bool $fittotarget Whether to scale each page to fit the A4 target
      * @return void
      */
-    private function append_source_pages(\setasign\Fpdi\Tcpdf\Fpdi $pdf, string $sourcepath, bool $skipfirstpage = false): void {
+    private function append_source_pages(
+        \setasign\Fpdi\Tcpdf\Fpdi $pdf,
+        string $sourcepath,
+        bool $skipfirstpage = false,
+        bool $fittotarget = false
+    ): void {
         $pagecount = $pdf->setSourceFile($sourcepath);
-        $startpage = $skipfirstpage ? 2 : 1;
-        for ($pagenumber = $startpage; $pagenumber <= $pagecount; $pagenumber++) {
+        for ($pagenumber = $skipfirstpage ? 2 : 1; $pagenumber <= $pagecount; $pagenumber++) {
             $templateid = $pdf->importPage($pagenumber);
             $templatesize = $pdf->getTemplateSize($templateid);
+            if ($fittotarget) {
+                custom_page_fitter::add_fitted_page($pdf, $templateid, $templatesize);
+                continue;
+            }
             $pdf->AddPage($templatesize['orientation'], [$templatesize['width'], $templatesize['height']]);
             $pdf->useTemplate($templateid);
         }

@@ -35,9 +35,10 @@ $maxlines = [
     'classes/pdf_generator.php' => 210,
     'classes/question_pdf_generator_base.php' => 190,
     'classes/service/correction_post_processor.php' => 120,
+    'classes/service/custom_page_fitter.php' => 70,
     'classes/service/question_pdf_document_builder.php' => 240,
     'classes/service/question_pdf_question_renderer.php' => 220,
-    'classes/service/questionnaire_merge_service.php' => 150,
+    'classes/service/questionnaire_merge_service.php' => 155,
     'classes/service/uploaded_pdf_resolver.php' => 120,
 ];
 

@@ -209,21 +209,14 @@ class temporal_page_presenter {
         $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'download', 'value' => 1]);
         $output .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 
-        $output .= $this->render_form_field(
-            'checkbox',
-            get_string('include_answer_sheet', 'local_convector'),
-            ['name' => 'includeanswersheet', 'value' => 1, 'checked' => 'checked']
-        );
-        $output .= $this->render_form_field(
-            'file',
+        $output .= $this->render_toggle_file_field(
+            'customfirstpage',
             get_string('custom_first_page', 'local_convector'),
-            ['name' => 'customfirstpage', 'accept' => '.pdf,application/pdf'],
             get_string('custom_first_page_help', 'local_convector')
         );
-        $output .= $this->render_form_field(
-            'file',
+        $output .= $this->render_toggle_file_field(
+            'customlastpage',
             get_string('custom_last_page', 'local_convector'),
-            ['name' => 'customlastpage', 'accept' => '.pdf,application/pdf'],
             get_string('custom_last_page_help', 'local_convector')
         );
 
@@ -238,21 +231,42 @@ class temporal_page_presenter {
     }
 
     /**
-     * Render one labelled form field.
+     * Render a checkbox-toggled file upload field.
      *
-     * @param string $type Input type
-     * @param string $label Field label
-     * @param array<string, mixed> $attributes Input attributes
-     * @param string|null $help Optional help text
+     * The file drop zone is hidden and disabled until the checkbox is checked.
+     *
+     * @param string $fieldname Form field name
+     * @param string $label Checkbox label
+     * @param string $help Help text
      * @return string
      */
-    private function render_form_field(string $type, string $label, array $attributes, ?string $help = null): string {
+    private function render_toggle_file_field(string $fieldname, string $label, string $help): string {
+        $containerid = $fieldname . '_container';
+        $toggle = 'var c=document.getElementById(\'' . $containerid . '\');'
+            . 'c.style.display=this.checked?\'block\':\'none\';'
+            . 'c.querySelector(\'input[type=file]\').disabled=!this.checked;';
+
         $output = html_writer::start_div('form-group mb-2');
-        $output .= html_writer::tag('label', $label, ['class' => 'd-block font-weight-bold']);
-        $output .= html_writer::empty_tag('input', array_merge(['type' => $type, 'class' => 'form-control-file'], $attributes));
-        if ($help !== null) {
-            $output .= html_writer::div($help, 'form-text text-muted small');
-        }
+        $output .= html_writer::start_tag('label', ['class' => 'd-block font-weight-bold']);
+        $output .= html_writer::empty_tag('input', [
+            'type' => 'checkbox',
+            'name' => 'use' . $fieldname,
+            'value' => 1,
+            'onchange' => $toggle,
+        ]);
+        $output .= ' ' . $label;
+        $output .= html_writer::end_tag('label');
+
+        $output .= html_writer::start_div('form-group mb-2', ['id' => $containerid, 'style' => 'display:none;']);
+        $output .= html_writer::empty_tag('input', [
+            'type' => 'file',
+            'name' => $fieldname,
+            'accept' => '.pdf,application/pdf',
+            'class' => 'form-control-file',
+            'disabled' => 'disabled',
+        ]);
+        $output .= html_writer::div($help, 'form-text text-muted small');
+        $output .= html_writer::end_div();
         $output .= html_writer::end_div();
 
         return $output;

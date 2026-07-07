@@ -51,10 +51,8 @@ class uploaded_pdf_resolver {
      * @return generation_options
      */
     public function resolve_options(): generation_options {
-        $includeanswersheet = optional_param('includeanswersheet', true, PARAM_BOOL);
-
         return new generation_options(
-            $includeanswersheet,
+            true,
             $this->resolve_uploaded_file('customfirstpage'),
             $this->resolve_uploaded_file('customlastpage')
         );
@@ -76,10 +74,16 @@ class uploaded_pdf_resolver {
     /**
      * Resolve one uploaded PDF into a temp file path.
      *
+     * The file is only resolved when the matching toggle checkbox was checked.
+     *
      * @param string $fieldname Form field name
      * @return string|null Resolved path, or null when no valid file was uploaded
      */
     private function resolve_uploaded_file(string $fieldname): ?string {
+        if (!optional_param('use' . $fieldname, false, PARAM_BOOL)) {
+            return null;
+        }
+
         if (empty($_FILES[$fieldname]['tmp_name']) || ($_FILES[$fieldname]['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
             return null;
         }

@@ -43,11 +43,10 @@ $string['cannot_generate_normalized_pdfs'] = 'You can review the Convector analy
 $string['final_pages_info'] = 'Number of pages: {$a}';
 $string['no_normalization_needed'] = 'All exam copies already have the same number of pages. No normalization is needed.';
 
-$string['include_answer_sheet'] = 'Include answer sheet';
-$string['custom_first_page'] = 'Custom first page (PDF)';
-$string['custom_first_page_help'] = 'Optional PDF inserted at the very beginning of each questionnaire, before the native cover page. Leave empty to keep the default cover.';
-$string['custom_last_page'] = 'Custom last page (PDF)';
-$string['custom_last_page_help'] = 'Optional PDF inserted before the blank normalization pages, at the end of each questionnaire and correction. Leave empty to omit it.';
+$string['custom_first_page'] = 'Use a custom first page';
+$string['custom_first_page_help'] = 'Replaces the default cover page (page 1) of the questionnaire and correction with the provided PDF.';
+$string['custom_last_page'] = 'Use a custom last page';
+$string['custom_last_page_help'] = 'Replaces the native answer sheet (all its pages). Inserted before the blank normalization pages.';
 
 $string['error_no_offlinequiz'] = 'Error: no OfflineQuiz activity was found.';
 $string['error_no_questions'] = 'Error: this exam does not contain any questions. At least one question is required.';

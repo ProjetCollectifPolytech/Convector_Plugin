@@ -43,11 +43,10 @@ $string['cannot_generate_normalized_pdfs'] = 'Vous pouvez consulter l\'analyse C
 $string['final_pages_info'] = 'Nombre de pages : {$a}';
 $string['no_normalization_needed'] = 'Toutes les copies d\'examen ont deja le meme nombre de pages. Aucune normalisation n\'est necessaire.';
 
-$string['include_answer_sheet'] = 'Inclure les feuilles de reponse';
-$string['custom_first_page'] = 'Premiere page personnalisee (PDF)';
-$string['custom_first_page_help'] = 'PDF optionnel insere au tout debut de chaque questionnaire, avant la page de garde native. Laisser vide pour conserver la page de garde par defaut.';
-$string['custom_last_page'] = 'Derniere page personnalisee (PDF)';
-$string['custom_last_page_help'] = 'PDF optionnel insere avant les pages blanches de normalisation, a la fin de chaque questionnaire et correction. Laisser vide pour l\'omettre.';
+$string['custom_first_page'] = 'Utiliser une premiere page personnalisee';
+$string['custom_first_page_help'] = 'Remplace la page de garde par defaut (page 1) du questionnaire et de la correction par le PDF fourni.';
+$string['custom_last_page'] = 'Utiliser une derniere page personnalisee';
+$string['custom_last_page_help'] = 'Remplace la feuille de reponse native (toutes ses pages). Inseree avant les pages blanches de normalisation.';
 
 $string['error_no_offlinequiz'] = 'Erreur : aucune activite OfflineQuiz n\'a ete trouvee.';
 $string['error_no_questions'] = 'Erreur : cet examen ne contient aucune question. Au moins une question est requise.';

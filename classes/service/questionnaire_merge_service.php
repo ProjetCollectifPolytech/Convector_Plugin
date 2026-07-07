@@ -36,10 +36,10 @@ class questionnaire_merge_service {
      * Merge questionnaire, optional answer sheet and custom pages, then append blank pages.
      *
      * Merge order:
-     *  1. custom first page (when provided)
-     *  2. questionnaire
-     *  3. answer sheet (when provided)
-     *  4. custom last page (when provided)
+     *  1. custom first page (when provided; replaces questionnaire cover page 1)
+     *  2. questionnaire (page 1 skipped when custom first page replaces the cover)
+     *  3. answer sheet (skipped when excluded or replaced by a custom last page)
+     *  4. custom last page (when provided; replaces the native answer sheet)
      *  5. blank normalization pages (always last)
      *
      * @param int $groupid OfflineQuiz group id
@@ -69,13 +69,16 @@ class questionnaire_merge_service {
             $pdf->SetMargins(0, 0, 0);
             $pdf->SetAutoPageBreak(false);
 
-            if ($options !== null && $options->customfirstpagepath !== null) {
+            $replacecover = $options !== null && $options->should_replace_cover_page();
+            $skipanswersheet = $options !== null && $options->should_skip_answer_sheet();
+
+            if ($replacecover) {
                 $this->append_source_pdf($pdf, $options->customfirstpagepath, 'custom');
             }
 
-            $this->append_source_pdf($pdf, $questionnairepath, 'questionnaire');
+            $this->append_source_pdf($pdf, $questionnairepath, 'questionnaire', $replacecover);
 
-            if ($answersheetpath !== null) {
+            if (!$skipanswersheet && $answersheetpath !== null) {
                 $this->append_source_pdf($pdf, $answersheetpath, 'answer_sheet');
             }
 
@@ -106,11 +109,18 @@ class questionnaire_merge_service {
      * @param merged_questionnaire_pdf $pdf Destination PDF
      * @param string $sourcepath Source PDF path
      * @param string $type Source type
+     * @param bool $skipfirstpage Whether to skip the first page (cover replacement)
      * @return void
      */
-    private function append_source_pdf(merged_questionnaire_pdf $pdf, string $sourcepath, string $type): void {
+    private function append_source_pdf(
+        merged_questionnaire_pdf $pdf,
+        string $sourcepath,
+        string $type,
+        bool $skipfirstpage = false
+    ): void {
         $pagecount = $pdf->setSourceFile($sourcepath);
-        for ($pagenumber = 1; $pagenumber <= $pagecount; $pagenumber++) {
+        $startpage = $skipfirstpage ? 2 : 1;
+        for ($pagenumber = $startpage; $pagenumber <= $pagecount; $pagenumber++) {
             $templateid = $pdf->importPage($pagenumber);
             $templatesize = $pdf->getTemplateSize($templateid);
             $pdf->AddPage($templatesize['orientation'], [$templatesize['width'], $templatesize['height']]);

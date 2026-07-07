@@ -71,4 +71,22 @@ class generation_options {
     public function has_custom_pages(): bool {
         return $this->customfirstpagepath !== null || $this->customlastpagepath !== null;
     }
+
+    /**
+     * Whether the native answer sheet must be skipped (excluded or replaced by custom last page).
+     *
+     * @return bool
+     */
+    public function should_skip_answer_sheet(): bool {
+        return !$this->includeanswersheet || $this->customlastpagepath !== null;
+    }
+
+    /**
+     * Whether the default cover page (page 1) is replaced by a custom first page.
+     *
+     * @return bool
+     */
+    public function should_replace_cover_page(): bool {
+        return $this->customfirstpagepath !== null;
+    }
 }

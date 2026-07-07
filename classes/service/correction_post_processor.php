@@ -54,11 +54,13 @@ class correction_post_processor {
             $pdf->SetMargins(0, 0, 0);
             $pdf->SetAutoPageBreak(false);
 
-            if ($options->customfirstpagepath !== null) {
+            $replacecover = $options->should_replace_cover_page();
+
+            if ($replacecover) {
                 $this->append_source_pages($pdf, $options->customfirstpagepath);
             }
 
-            $this->append_source_pages($pdf, $correctionpath);
+            $this->append_source_pages($pdf, $correctionpath, $replacecover);
 
             if ($options->customlastpagepath !== null) {
                 $this->append_source_pages($pdf, $options->customlastpagepath);
@@ -87,11 +89,13 @@ class correction_post_processor {
      *
      * @param \setasign\Fpdi\Tcpdf\Fpdi $pdf Destination PDF
      * @param string $sourcepath Source PDF path
+     * @param bool $skipfirstpage Whether to skip the first page (cover replacement)
      * @return void
      */
-    private function append_source_pages(\setasign\Fpdi\Tcpdf\Fpdi $pdf, string $sourcepath): void {
+    private function append_source_pages(\setasign\Fpdi\Tcpdf\Fpdi $pdf, string $sourcepath, bool $skipfirstpage = false): void {
         $pagecount = $pdf->setSourceFile($sourcepath);
-        for ($pagenumber = 1; $pagenumber <= $pagecount; $pagenumber++) {
+        $startpage = $skipfirstpage ? 2 : 1;
+        for ($pagenumber = $startpage; $pagenumber <= $pagecount; $pagenumber++) {
             $templateid = $pdf->importPage($pagenumber);
             $templatesize = $pdf->getTemplateSize($templateid);
             $pdf->AddPage($templatesize['orientation'], [$templatesize['width'], $templatesize['height']]);

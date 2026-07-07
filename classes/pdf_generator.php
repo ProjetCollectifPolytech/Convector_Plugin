@@ -134,7 +134,8 @@ class pdf_generator {
         ?generation_options $options
     ): void {
         $questionnaire = $this->quizgenerator->generate($groupid, $data);
-        $answersheet = $options !== null && !$options->includeanswersheet
+        $skipanswersheet = $options !== null && $options->should_skip_answer_sheet();
+        $answersheet = $skipanswersheet
             ? false
             : $this->answersheetgenerator->generate($groupid, $data);
 
